@@ -4,6 +4,8 @@
  * @version 2017/11/28
  */
 
+var supportBlob = 'Blob' in window;
+
 /**
  * @function XDR
  * @param {Object} options
@@ -34,7 +36,7 @@ export function XHR(options) {
     xhr.withCredentials = true;
   }
 
-  if ('responseType' in xhr && 'Blob' in window) {
+  if ('responseType' in xhr && supportBlob) {
     xhr.responseType = 'blob';
   }
 
