@@ -1,0 +1,19 @@
+{
+  "name": "fetch",
+  "version": "0.0.1",
+  "description": "fetch polyfill which supports all mainstream browsers.",
+  "author": {
+    "name": "nuintun",
+    "email": "nuintun@qq.com"
+  },
+  "homepage": "https://nuintun.github.io/fetch",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nuintun/fetch.git"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^0.52.0",
+    "uglify-es": "^3.2.0"
+  }
+}
