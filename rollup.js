@@ -27,7 +27,7 @@ rollup
 
       bundle
         .generate({
-          format: 'umd',
+          format: 'iife',
           indent: true,
           strict: true,
           amd: { id: 'fetch' },
