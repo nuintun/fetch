@@ -4,13 +4,35 @@
  * @version 2017/11/28
  */
 
-import { supportFetch, supportXDomainRequest, supportSearchParams } from './support';
-import { typeOf } from './utils';
 import Request from './request';
 import Response from './response';
 import Headers from './headers';
-import XDR from './transports/xdr';
-import XHR from './transports/xhr';
+import { typeOf } from './utils';
+import { supportFetch, supportBlob, supportXMLHttpRequest, supportSearchParams } from './support';
+
+/**
+ * @function normalizeEvents
+ * @param {XMLHttpRequest|XDomainRequest} xhr
+ */
+function normalizeEvents(xhr) {
+  var events = {};
+
+  ['load', 'error', 'timeout'].forEach(function(method) {
+    xhr['on' + method] = function() {
+      if (events[method]) {
+        events[method](xhr);
+      }
+    };
+  });
+
+  xhr.on = function(type, fn) {
+    events[type] = fn;
+  };
+
+  xhr.onabort = function() {
+    events = {};
+  };
+}
 
 function parseHeaders(xhr) {
   var headers = new Headers();
@@ -55,7 +77,13 @@ function fetch(input, init) {
       request = new Request(input, init);
     }
 
-    var xhr = supportSearchParams ? new XDR(request) : new XHR(request);
+    var xhr = supportXMLHttpRequest ? new XMLHttpRequest() : new XDomainRequest();
+
+    if (typeOf(request.timeout) === 'number') {
+      xdr.timeout = request.timeout;
+    }
+
+    normalizeEvents(xhr);
 
     xhr.on('load', function(xhr) {
       var options = {
@@ -79,6 +107,16 @@ function fetch(input, init) {
     });
 
     xhr.open(request.method, request.url, true);
+
+    if (request.credentials === 'include') {
+      xhr.withCredentials = true;
+    } else if (request.credentials === 'omit') {
+      xhr.withCredentials = false;
+    }
+
+    if ('responseType' in xhr && supportBlob) {
+      xhr.responseType = 'blob';
+    }
 
     if (xhr.setRequestHeader) {
       request.headers.forEach(function(value, name) {

@@ -13,6 +13,6 @@ export var supportResponse = isNativeMethod(window.Response);
 export var supportFormData = isNativeMethod(window.FormData);
 export var supportArrayBuffer = isNativeMethod(window.ArrayBuffer);
 export var supportSearchParams = isNativeMethod(window.URLSearchParams);
-export var supportXDomainRequest = isNativeMethod(window.XDomainRequest);
+export var supportXMLHttpRequest = isNativeMethod(window.XMLHttpRequest);
 export var supportBlob = isNativeMethod(window.FileReader) && isNativeMethod(window.Blob);
 export var supportIterable = isNativeMethod(window.Symbol) && 'iterator' in window.Symbol;

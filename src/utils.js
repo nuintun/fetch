@@ -19,30 +19,6 @@ export function typeOf(value) {
 }
 
 /**
- * @function bindEvents
- * @param {XMLHttpRequest|XDomainRequest} xhr
- */
-export function bindEvents(xhr) {
-  var events = {};
-
-  ['load', 'error', 'timeout'].forEach(function(method) {
-    xhr['on' + method] = function() {
-      if (events[method]) {
-        events[method](xhr);
-      }
-    };
-  });
-
-  xhr.on = function(type, fn) {
-    events[type] = fn;
-  };
-
-  xhr.onabort = function() {
-    events = {};
-  };
-}
-
-/**
  * @function Blank
  * @description Use a blank constructor save memory for extend function.
  */

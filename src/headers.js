@@ -8,7 +8,7 @@ import { typeOf } from './utils';
 import { supportHeaders, supportIterable } from './support';
 
 function normalizeName(name) {
-  if (typeOf(name) !== 'string') {
+  if (typeof name !== 'string') {
     name = String(name);
   }
 
@@ -20,7 +20,7 @@ function normalizeName(name) {
 }
 
 function normalizeValue(value) {
-  if (typeOf(value) !== 'string') {
+  if (typeof value !== 'string') {
     value = String(value);
   }
 

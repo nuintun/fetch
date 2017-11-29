@@ -22,30 +22,6 @@
   }
 
   /**
-   * @function bindEvents
-   * @param {XMLHttpRequest|XDomainRequest} xhr
-   */
-  function bindEvents(xhr) {
-    var events = {};
-
-    ['load', 'error', 'timeout'].forEach(function(method) {
-      xhr['on' + method] = function() {
-        if (events[method]) {
-          events[method](xhr);
-        }
-      };
-    });
-
-    xhr.on = function(type, fn) {
-      events[type] = fn;
-    };
-
-    xhr.onabort = function() {
-      events = {};
-    };
-  }
-
-  /**
    * @function Blank
    * @description Use a blank constructor save memory for extend function.
    */
@@ -120,7 +96,7 @@
   var supportFormData = isNativeMethod(window.FormData);
   var supportArrayBuffer = isNativeMethod(window.ArrayBuffer);
   var supportSearchParams = isNativeMethod(window.URLSearchParams);
-  var supportXDomainRequest = isNativeMethod(window.XDomainRequest);
+  var supportXMLHttpRequest = isNativeMethod(window.XMLHttpRequest);
   var supportBlob = isNativeMethod(window.FileReader) && isNativeMethod(window.Blob);
   var supportIterable = isNativeMethod(window.Symbol) && 'iterator' in window.Symbol;
 
@@ -131,7 +107,7 @@
    */
 
   function normalizeName(name) {
-    if (typeOf(name) !== 'string') {
+    if (typeof name !== 'string') {
       name = String(name);
     }
 
@@ -143,7 +119,7 @@
   }
 
   function normalizeValue(value) {
-    if (typeOf(value) !== 'string') {
+    if (typeof value !== 'string') {
       value = String(value);
     }
 
@@ -624,63 +600,34 @@
   var Response$1 = window.Response;
 
   /**
-   * @module xdr
-   * @license MIT
-   * @version 2017/11/28
-   */
-
-  /**
-   * @function XDR
-   * @param {Request} request
-   * @returns {XDomainRequest}
-   * @see https://msdn.microsoft.com/en-us/library/cc288060(v=VS.85).aspx
-   */
-  function XDR(request) {
-    var xdr = new XDomainRequest();
-
-    bindEvents(xdr);
-
-    if (typeOf(request.timeout) === 'number') {
-      xdr.timeout = request.timeout;
-    }
-
-    return xdr;
-  }
-
-  /**
-   * @module xhr
-   * @license MIT
-   * @version 2017/11/28
-   */
-
-  /**
-   * @function XDR
-   * @param {Request} request
-   * @returns {XMLHttpRequest}
-   */
-  function XHR(request) {
-    var xhr = new XMLHttpRequest();
-
-    bindEvents(xhr);
-
-    if (request.credentials === 'include') {
-      xhr.withCredentials = true;
-    } else if (request.credentials === 'omit') {
-      xhr.withCredentials = false;
-    }
-
-    if ('responseType' in xhr && supportBlob) {
-      xhr.responseType = 'blob';
-    }
-
-    return xhr;
-  }
-
-  /**
    * @module fetch
    * @license MIT
    * @version 2017/11/28
    */
+
+  /**
+   * @function normalizeEvents
+   * @param {XMLHttpRequest|XDomainRequest} xhr
+   */
+  function normalizeEvents(xhr) {
+    var events = {};
+
+    ['load', 'error', 'timeout'].forEach(function(method) {
+      xhr['on' + method] = function() {
+        if (events[method]) {
+          events[method](xhr);
+        }
+      };
+    });
+
+    xhr.on = function(type, fn) {
+      events[type] = fn;
+    };
+
+    xhr.onabort = function() {
+      events = {};
+    };
+  }
 
   function parseHeaders(xhr) {
     var headers = new Headers$1();
@@ -725,7 +672,13 @@
         request = new Request$1(input, init);
       }
 
-      var xhr = supportSearchParams ? new XDR(request) : new XHR(request);
+      var xhr = supportXMLHttpRequest ? new XMLHttpRequest() : new XDomainRequest();
+
+      if (typeOf(request.timeout) === 'number') {
+        xdr.timeout = request.timeout;
+      }
+
+      normalizeEvents(xhr);
 
       xhr.on('load', function(xhr) {
         var options = {
@@ -749,6 +702,16 @@
       });
 
       xhr.open(request.method, request.url, true);
+
+      if (request.credentials === 'include') {
+        xhr.withCredentials = true;
+      } else if (request.credentials === 'omit') {
+        xhr.withCredentials = false;
+      }
+
+      if ('responseType' in xhr && supportBlob) {
+        xhr.responseType = 'blob';
+      }
 
       if (xhr.setRequestHeader) {
         request.headers.forEach(function(value, name) {
