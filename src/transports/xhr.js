@@ -9,16 +9,18 @@ import { supportBlob } from '../support';
 
 /**
  * @function XDR
- * @param {Object} options
+ * @param {Request} request
  * @returns {XMLHttpRequest}
  */
-export default function XHR(options) {
+export default function XHR(request) {
   var xhr = new XMLHttpRequest();
 
   bindEvents(xhr);
 
-  if (options.credentials === 'include') {
+  if (request.credentials === 'include') {
     xhr.withCredentials = true;
+  } else if (request.credentials === 'omit') {
+    xhr.withCredentials = false;
   }
 
   if ('responseType' in xhr && supportBlob) {

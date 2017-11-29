@@ -11,6 +11,7 @@ export var supportHeaders = isNativeMethod(window.Headers);
 export var supportRequest = isNativeMethod(window.Request);
 export var supportResponse = isNativeMethod(window.Response);
 export var supportFormData = isNativeMethod(window.FormData);
+export var supportArrayBuffer = isNativeMethod(window.ArrayBuffer);
 export var supportSearchParams = isNativeMethod(window.URLSearchParams);
 export var supportXDomainRequest = isNativeMethod(window.XDomainRequest);
 export var supportBlob = isNativeMethod(window.FileReader) && isNativeMethod(window.Blob);

@@ -5,133 +5,40 @@
  */
 
 import { typeOf } from './utils';
-import { supportBlob, supportFormData, supportSearchParams } from './support';
+import { supportBlob, supportFormData, supportSearchParams, supportArrayBuffer } from './support';
 
-/**
- * @class Body
- */
-export default function Body() {
-  this.bodyUsed = false;
+if (supportArrayBuffer) {
+  var viewClasses = [
+    '[object Int8Array]',
+    '[object Uint8Array]',
+    '[object Uint8ClampedArray]',
+    '[object Int16Array]',
+    '[object Uint16Array]',
+    '[object Int32Array]',
+    '[object Uint32Array]',
+    '[object Float32Array]',
+    '[object Float64Array]'
+  ];
+
+  var isDataView = function(obj) {
+    return obj && DataView.prototype.isPrototypeOf(obj);
+  };
+
+  var isArrayBufferView =
+    ArrayBuffer.isView ||
+    function(obj) {
+      return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1;
+    };
 }
 
-['text', 'blob', 'formData', 'json', 'arrayBuffer'].forEach(function(method) {
-  Body.prototype[method] = function() {
-    return consumeBody(this).then(function(body) {
-      return convertBody(body, method);
-    });
-  };
-});
-
-Body.prototype._initBody = function(body) {
-  this._body = body;
-
-  if (!this.headers.get('content-type')) {
-    var a = bodyType(body);
-
-    switch (a) {
-      case 'text':
-        this.headers.set('content-type', 'text/plain;charset=UTF-8');
-        break;
-      case 'blob':
-        if (body && body.type) {
-          this.headers.set('content-type', body.type);
-        }
-        break;
-      case 'searchParams':
-        this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
-        break;
-    }
-  }
-};
-
-function consumeBody(body) {
+function consumed(body) {
   if (body.bodyUsed) {
     return Promise.reject(new TypeError('Already read'));
-  } else {
-    body.bodyUsed = true;
-    return Promise.resolve(body._body);
   }
+  body.bodyUsed = true;
 }
 
-function convertBody(body, to) {
-  var from = bodyType(body);
-
-  if (body === null || body === void 0 || !from || from === to) {
-    return Promise.resolve(body);
-  } else if (map[to] && map[to][from]) {
-    return map[to][from](body);
-  } else {
-    return Promise.reject(new Error('Convertion from ' + from + ' to ' + to + ' not supported'));
-  }
-}
-
-var map = {
-  text: {
-    json: function(body) {
-      // json --> text
-      return Promise.resolve(JSON.stringify(body));
-    },
-    blob: function(body) {
-      // blob --> text
-      return blob2text(body);
-    },
-    searchParams: function(body) {
-      // searchParams --> text
-      return Promise.resolve(body.toString());
-    }
-  },
-  json: {
-    text: function(body) {
-      // text --> json
-      return Promise.resolve(parseJSON(body));
-    },
-    blob: function(body) {
-      // blob --> json
-      return blob2text(body).then(parseJSON);
-    }
-  },
-  formData: {
-    text: function(body) {
-      // text --> formData
-      return text2FormData(body);
-    }
-  },
-  blob: {
-    text: function(body) {
-      // json --> blob
-      return Promise.resolve(new Blob([body]));
-    },
-    json: function(body) {
-      // json --> blob
-      return Promise.resolve(new Blob([JSON.stringify(body)]));
-    }
-  },
-  arrayBuffer: {
-    blob: function(body) {
-      return blob2ArrayBuffer(body);
-    }
-  }
-};
-
-function bodyType(body) {
-  var type = typeOf(body);
-
-  if (type === 'string') {
-    return 'text';
-  } else if (supportBlob && body instanceof Blob) {
-    return 'blob';
-  } else if (supportFormData && body instanceof FormData) {
-    return 'formData';
-  } else if (supportSearchParams && body instanceof URLSearchParams) {
-    return 'searchParams';
-  } else if (body && type === 'object') {
-    return 'json';
-  } else {
-    return null;
-  }
-}
-
-function reader2Promise(reader) {
+function fileReaderReady(reader) {
   return new Promise(function(resolve, reject) {
     reader.onload = function() {
       resolve(reader.result);
@@ -143,7 +50,48 @@ function reader2Promise(reader) {
   });
 }
 
-function text2FormData(body) {
+function readBlobAsArrayBuffer(blob) {
+  var reader = new FileReader();
+  var promise = fileReaderReady(reader);
+
+  reader.readAsArrayBuffer(blob);
+
+  return promise;
+}
+
+function readBlobAsText(blob) {
+  var reader = new FileReader();
+  var promise = fileReaderReady(reader);
+
+  reader.readAsText(blob);
+
+  return promise;
+}
+
+function readArrayBufferAsText(buf) {
+  var view = new Uint8Array(buf);
+  var chars = new Array(view.length);
+
+  for (var i = 0; i < view.length; i++) {
+    chars[i] = String.fromCharCode(view[i]);
+  }
+
+  return chars.join('');
+}
+
+function bufferClone(buf) {
+  if (buf.slice) {
+    return buf.slice(0);
+  } else {
+    var view = new Uint8Array(buf.byteLength);
+
+    view.set(new Uint8Array(buf));
+
+    return view.buffer;
+  }
+}
+
+function decode(body) {
   var form = new FormData();
 
   body
@@ -154,30 +102,105 @@ function text2FormData(body) {
         var split = bytes.split('=');
         var name = split.shift().replace(/\+/g, ' ');
         var value = split.join('=').replace(/\+/g, ' ');
-
         form.append(decodeURIComponent(name), decodeURIComponent(value));
       }
     });
 
-  return Promise.resolve(form);
+  return form;
 }
 
-function blob2ArrayBuffer(blob) {
-  var reader = new FileReader();
-
-  reader.readAsArrayBuffer(blob);
-
-  return reader2Promise(reader);
+/**
+ * @class Body
+ */
+export default function Body() {
+  this.bodyUsed = false;
 }
 
-function blob2text(blob) {
-  var reader = new FileReader();
+Body.prototype._initBody = function(body) {
+  this._bodyInit = body;
 
-  reader.readAsText(blob);
+  if (!body) {
+    this._bodyText = '';
+  } else if (typeOf(body) === 'string') {
+    this._bodyText = body;
+  } else if (supportBlob && Blob.prototype.isPrototypeOf(body)) {
+    this._bodyBlob = body;
+  } else if (supportFormData && FormData.prototype.isPrototypeOf(body)) {
+    this._bodyFormData = body;
+  } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+    this._bodyText = body.toString();
+  } else if (supportArrayBuffer && supportBlob && isDataView(body)) {
+    this._bodyArrayBuffer = bufferClone(body.buffer);
+    // IE 10-11 can't handle a DataView body.
+    this._bodyInit = new Blob([this._bodyArrayBuffer]);
+  } else if (supportArrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
+    this._bodyArrayBuffer = bufferClone(body);
+  } else {
+    throw new Error('Unsupported BodyInit type');
+  }
 
-  return reader2Promise(reader);
+  if (!this.headers.get('content-type')) {
+    if (typeOf(body) === 'string') {
+      this.headers.set('content-type', 'text/plain;charset=UTF-8');
+    } else if (this._bodyBlob && this._bodyBlob.type) {
+      this.headers.set('content-type', this._bodyBlob.type);
+    } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
+      this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+    }
+  }
+};
+
+if (supportBlob) {
+  Body.prototype.blob = function() {
+    var rejected = consumed(this);
+
+    if (rejected) {
+      return rejected;
+    }
+
+    if (this._bodyBlob) {
+      return Promise.resolve(this._bodyBlob);
+    } else if (this._bodyArrayBuffer) {
+      return Promise.resolve(new Blob([this._bodyArrayBuffer]));
+    } else if (this._bodyFormData) {
+      throw new Error('Could not read FormData body as blob');
+    } else {
+      return Promise.resolve(new Blob([this._bodyText]));
+    }
+  };
+
+  Body.prototype.arrayBuffer = function() {
+    if (this._bodyArrayBuffer) {
+      return consumed(this) || Promise.resolve(this._bodyArrayBuffer);
+    } else {
+      return this.blob().then(readBlobAsArrayBuffer);
+    }
+  };
 }
 
-function parseJSON(body) {
-  return JSON.parse(body);
+Body.prototype.text = function() {
+  var rejected = consumed(this);
+  if (rejected) {
+    return rejected;
+  }
+
+  if (this._bodyBlob) {
+    return readBlobAsText(this._bodyBlob);
+  } else if (this._bodyArrayBuffer) {
+    return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
+  } else if (this._bodyFormData) {
+    throw new Error('could not read FormData body as text');
+  } else {
+    return Promise.resolve(this._bodyText);
+  }
+};
+
+if (supportFormData) {
+  Body.prototype.formData = function() {
+    return this.text().then(decode);
+  };
 }
+
+Body.prototype.json = function() {
+  return this.text().then(JSON.parse);
+};

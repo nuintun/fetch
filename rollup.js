@@ -29,9 +29,7 @@ rollup
         .generate({
           format: 'iife',
           indent: true,
-          strict: true,
-          amd: { id: 'fetch' },
-          name: 'fetch'
+          strict: true
         })
         .then(result => {
           fs.writeFileSync(src, result.code);

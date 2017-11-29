@@ -9,67 +9,71 @@ import { extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
-if (!supportRequest) {
-  /**
-   * @class Request
-   * @param {any} input
-   * @param {Object} options
-   */
-  function Request(input, options) {
-    options = options || {};
+// HTTP methods whose capitalization should be normalized
+var methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'];
 
-    var body = options.body;
+function normalizeMethod(method) {
+  var upcased = method.toUpperCase();
+  return methods.indexOf(upcased) > -1 ? upcased : method;
+}
 
-    if (input instanceof Request) {
-      if (input.bodyUsed) {
-        throw new TypeError('Already read');
-      }
+/**
+ * @class Request
+ * @param {Request|string} input
+ * @param {Object} options
+ */
+function Request(input, options) {
+  options = options || {};
 
-      this.url = input.url;
-      this.credentials = input.credentials;
+  var body = options.body;
 
-      if (!options.headers) {
-        var headers = (this.headers = new Headers(input.headers));
-
-        if (!headers.map['x-requested-with']) {
-          headers.set('X-Requested-With', 'XMLHttpRequest');
-        }
-      }
-
-      this.method = input.method;
-      this.mode = input.mode;
-
-      if (!body) {
-        body = input._body;
-        input.bodyUsed = true;
-      }
-    } else {
-      this.url = input;
+  if (input instanceof Request) {
+    if (input.bodyUsed) {
+      throw new TypeError('Already read');
     }
 
-    this.credentials = options.credentials || this.credentials || 'omit';
+    this.url = input.url;
+    this.credentials = input.credentials;
 
-    if (options.headers || !this.headers) {
-      this.headers = new Headers(options.headers);
+    if (!options.headers) {
+      this.headers = new Headers(input.headers);
     }
 
-    this.method = (options.method || this.method || 'GET').toUpperCase();
-    this.mode = options.mode || this.mode || null;
-    this.referrer = null;
+    this.method = input.method;
+    this.mode = input.mode;
 
-    if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-      throw new TypeError('Body not allowed for GET or HEAD requests');
+    if (!body && input._bodyInit !== null) {
+      body = input._body;
+      input.bodyUsed = true;
     }
-
-    this._initBody(body);
+  } else {
+    this.url = String(input);
   }
 
-  extend(Body, Request);
+  this.credentials = options.credentials || this.credentials || 'omit';
 
-  Request.prototype.clone = function() {
-    return new Request(this);
-  };
+  if (options.headers || !this.headers) {
+    this.headers = new Headers(options.headers);
+  }
 
+  this.method = normalizeMethod(options.method || this.method || 'GET');
+  this.mode = options.mode || this.mode || null;
+  this.referrer = null;
+
+  if ((this.method === 'GET' || this.method === 'HEAD') && body) {
+    throw new TypeError('Body not allowed for GET or HEAD requests');
+  }
+
+  this._initBody(body);
+}
+
+extend(Body, Request);
+
+Request.prototype.clone = function() {
+  return new Request(this, { body: this._bodyInit });
+};
+
+if (!supportRequest) {
   window.Request = Request;
 }
 
