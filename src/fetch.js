@@ -165,9 +165,11 @@ function fetch(input, init) {
     }
 
     if (xhr.setRequestHeader) {
-      request.headers.forEach(function(value, name) {
-        xhr.setRequestHeader(name, value);
-      });
+      var headers = request.headers;
+
+      headers.forEach(function(value, name) {
+        xhr.setRequestHeader(this._headerNames[name], value);
+      }, headers);
     }
 
     if (useXDomainRequest) {

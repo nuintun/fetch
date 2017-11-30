@@ -70,6 +70,7 @@ function iteratorFor(items) {
  */
 export default function Headers(headers) {
   this.map = {};
+  this._headerNames = {};
 
   if (headers instanceof Headers) {
     headers.forEach(function(value, name) {
@@ -90,12 +91,15 @@ export default function Headers(headers) {
  * @param {string} value
  */
 Headers.prototype.append = function(name, value) {
-  name = normalizeName(name);
+  var key = normalizeName(name);
+
+  this._headerNames[key] = name;
+
+  var oldValue = this.map[key];
+
   value = normalizeValue(value);
 
-  var oldValue = this.map[name];
-
-  this.map[name] = oldValue ? oldValue + ',' + value : value;
+  this.map[key] = oldValue ? oldValue + ',' + value : value;
 };
 
 /**
@@ -103,7 +107,10 @@ Headers.prototype.append = function(name, value) {
  * @param {string} name
  */
 Headers.prototype['delete'] = function(name) {
-  delete this.map[normalizeName(name)];
+  name = normalizeName(name);
+
+  delete this.map[name];
+  delete this._headerNames[name];
 };
 
 /**
@@ -132,7 +139,10 @@ Headers.prototype.has = function(name) {
  * @param {string} value
  */
 Headers.prototype.set = function(name, value) {
-  this.map[normalizeName(name)] = normalizeValue(value);
+  var key = normalizeName(name);
+
+  this._headerNames[key] = name;
+  this.map[key] = normalizeValue(value);
 };
 
 /**
