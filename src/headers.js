@@ -50,7 +50,7 @@ function iteratorFor(items) {
     next: function() {
       var value = items[index++];
 
-      return { done: index >= length, value: value };
+      return { done: index > length, value: value };
     }
   };
 
