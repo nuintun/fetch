@@ -189,13 +189,13 @@ Body.prototype._initBody = function(body) {
     throw new Error('Unsupported BodyInit type');
   }
 
-  if (!this.headers.get('content-type')) {
+  if (!this.headers.get('Content-Type')) {
     if (typeOf(body) === 'string') {
-      this.headers.set('content-type', 'text/plain;charset=UTF-8');
+      this.headers.set('Content-Type', 'text/plain;charset=UTF-8');
     } else if (this._bodyBlob && this._bodyBlob.type) {
-      this.headers.set('content-type', this._bodyBlob.type);
+      this.headers.set('Content-Type', this._bodyBlob.type);
     } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-      this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+      this.headers.set('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
     }
   }
 };
@@ -217,7 +217,7 @@ if (supportBlob) {
     } else if (this._bodyArrayBuffer) {
       return Promise.resolve(new Blob([this._bodyArrayBuffer]));
     } else if (this._bodyFormData) {
-      throw new Error('Could not read FormData body as blob');
+      throw Promise.reject(new Error('Could not read FormData body as blob'));
     } else {
       return Promise.resolve(new Blob([this._bodyText]));
     }
@@ -252,7 +252,7 @@ Body.prototype.text = function() {
   } else if (this._bodyArrayBuffer) {
     return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
   } else if (this._bodyFormData) {
-    throw new Error('could not read FormData body as text');
+    throw Promise.reject(new Error('Could not read FormData body as text'));
   } else {
     return Promise.resolve(this._bodyText);
   }

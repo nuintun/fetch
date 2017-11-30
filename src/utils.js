@@ -79,3 +79,16 @@ export function isNativeMethod(value) {
 
   return NATIVE_RE.test(FPToString.call(value));
 }
+
+var A = document.createElement('a');
+
+/**
+ * @function normalizeURL
+ * @description Get full url
+ * @param {string} href
+ */
+export function normalizeURL(href) {
+  A.href = href;
+
+  return A.href;
+}

@@ -8,6 +8,8 @@ import { extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
+var redirectStatuses = [301, 302, 303, 307, 308];
+
 /**
  * @class Response
  * @constructor
@@ -15,9 +17,11 @@ import Body from './body';
  * @param {Object} options
  */
 export default function Response(body, options) {
+  Body.call(this);
+
   options = options || {};
 
-  this.type = 'default';
+  this.type = 'basic';
   this.status = options.status === undefined ? 200 : options.status;
 
   // @see https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
@@ -25,6 +29,7 @@ export default function Response(body, options) {
     this.status = 204;
   }
 
+  this.redirected = redirectStatuses.indexOf(this.status) >= 0;
   this.ok = this.status >= 200 && this.status < 300;
   this.statusText = options.statusText || 'OK';
   this.headers = new Headers(options.headers);
@@ -59,8 +64,6 @@ Response.error = function() {
 
   return response;
 };
-
-var redirectStatuses = [301, 302, 303, 307, 308];
 
 /**
  * @method redirect

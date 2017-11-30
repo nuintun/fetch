@@ -29,6 +29,8 @@ function normalizeMethod(method) {
  * @param {Object} options
  */
 export default function Request(input, options) {
+  Body.call(this);
+
   options = options || {};
 
   var body = options.body;

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <script src="http://libs.cdnjs.net/es5-shim/4.5.9/es5-shim.min.js"></script>
     <script src="http://libs.cdnjs.net/es6-promise/4.1.1/es6-promise.auto.min.js"></script>
+    <script src="http://libs.cdnjs.net/json2/20160511/json2.min.js"></script>
     <script src="../dist/fetch.min.js"></script>
   </head>
   <body>
@@ -11,14 +12,17 @@
       var result = fetch('/package.json', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
 
       result.then(function (response) {
-        console.log('response', response);
-        console.log('header', response.headers.get('Content-Type'));
+        console.log('Header: ', response.headers.get('Content-Type'));
 
-        return response.text();
+        var json = response.json();
+
+        console.log('Response: ', response);
+
+        return json;
       }).then(function (text) {
         console.log('Got text: ', text);
-      })['catch'](function (ex) {
-        console.log('Failed: ', ex);
+      })['catch'](function (error) {
+        console.log('Failed: ', error);
       });
     </script>
   </body>

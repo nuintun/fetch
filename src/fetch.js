@@ -7,7 +7,7 @@
 import Request from './request';
 import Response from './response';
 import Headers from './headers';
-import { typeOf } from './utils';
+import { typeOf, normalizeURL } from './utils';
 import { supportBlob, supportXDomainRequest, supportSearchParams } from './support';
 
 /**
@@ -80,17 +80,12 @@ function parseHeaders(xhr) {
 /**
  * @function responseURL
  * @param {XMLHttpRequest|XDomainRequest} xhr
+ * @param {Headers} headers
+ * @param {string} url
  * @returns {string}
  */
-function responseURL(xhr) {
-  if ('responseURL' in xhr) {
-    return xhr.responseURL;
-  }
-
-  // Avoid security warnings on getResponseHeader when not allowed by CORS
-  if (xhr.getResponseHeader && /^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
-    return xhr.getResponseHeader('X-Request-URL');
-  }
+function responseURL(xhr, headers, url) {
+  return 'responseURL' in xhr ? xhr.responseURL : headers.get('X-Request-URL') || normalizeURL(url);
 }
 
 /**
@@ -133,14 +128,14 @@ function fetch(input, init) {
     normalizeEvents(xhr);
 
     xhr.on('load', function(xhr) {
+      var headers = parseHeaders(xhr);
+      var body = 'response' in xhr ? xhr.response : xhr.responseText;
       var options = {
+        headers: headers,
         status: xhr.status,
         statusText: xhr.statusText,
-        headers: parseHeaders(xhr),
-        url: responseURL(xhr)
+        url: responseURL(xhr, headers, request.url)
       };
-
-      var body = 'response' in xhr ? xhr.response : xhr.responseText;
 
       resolve(new Response(body, options));
     });

@@ -85,6 +85,19 @@
     return NATIVE_RE.test(FPToString.call(value));
   }
 
+  var A = document.createElement('a');
+
+  /**
+   * @function normalizeURL
+   * @description Get full url
+   * @param {string} href
+   */
+  function normalizeURL(href) {
+    A.href = href;
+
+    return A.href;
+  }
+
   /**
    * @module support
    * @license MIT
@@ -482,13 +495,13 @@
       throw new Error('Unsupported BodyInit type');
     }
 
-    if (!this.headers.get('content-type')) {
+    if (!this.headers.get('Content-Type')) {
       if (typeOf(body) === 'string') {
-        this.headers.set('content-type', 'text/plain;charset=UTF-8');
+        this.headers.set('Content-Type', 'text/plain;charset=UTF-8');
       } else if (this._bodyBlob && this._bodyBlob.type) {
-        this.headers.set('content-type', this._bodyBlob.type);
+        this.headers.set('Content-Type', this._bodyBlob.type);
       } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-        this.headers.set('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+        this.headers.set('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
       }
     }
   };
@@ -510,7 +523,7 @@
       } else if (this._bodyArrayBuffer) {
         return Promise.resolve(new Blob([this._bodyArrayBuffer]));
       } else if (this._bodyFormData) {
-        throw new Error('Could not read FormData body as blob');
+        throw Promise.reject(new Error('Could not read FormData body as blob'));
       } else {
         return Promise.resolve(new Blob([this._bodyText]));
       }
@@ -545,7 +558,7 @@
     } else if (this._bodyArrayBuffer) {
       return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
     } else if (this._bodyFormData) {
-      throw new Error('could not read FormData body as text');
+      throw Promise.reject(new Error('Could not read FormData body as text'));
     } else {
       return Promise.resolve(this._bodyText);
     }
@@ -596,6 +609,8 @@
    * @param {Object} options
    */
   function Request(input, options) {
+    Body.call(this);
+
     options = options || {};
 
     var body = options.body;
@@ -658,6 +673,8 @@
    * @version 2017/11/28
    */
 
+  var redirectStatuses = [301, 302, 303, 307, 308];
+
   /**
    * @class Response
    * @constructor
@@ -665,9 +682,11 @@
    * @param {Object} options
    */
   function Response(body, options) {
+    Body.call(this);
+
     options = options || {};
 
-    this.type = 'default';
+    this.type = 'basic';
     this.status = options.status === undefined ? 200 : options.status;
 
     // @see https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
@@ -675,6 +694,7 @@
       this.status = 204;
     }
 
+    this.redirected = redirectStatuses.indexOf(this.status) >= 0;
     this.ok = this.status >= 200 && this.status < 300;
     this.statusText = options.statusText || 'OK';
     this.headers = new Headers(options.headers);
@@ -709,8 +729,6 @@
 
     return response;
   };
-
-  var redirectStatuses = [301, 302, 303, 307, 308];
 
   /**
    * @method redirect
@@ -804,17 +822,12 @@
   /**
    * @function responseURL
    * @param {XMLHttpRequest|XDomainRequest} xhr
+   * @param {Headers} headers
+   * @param {string} url
    * @returns {string}
    */
-  function responseURL(xhr) {
-    if ('responseURL' in xhr) {
-      return xhr.responseURL;
-    }
-
-    // Avoid security warnings on getResponseHeader when not allowed by CORS
-    if (xhr.getResponseHeader && /^X-Request-URL:/m.test(xhr.getAllResponseHeaders())) {
-      return xhr.getResponseHeader('X-Request-URL');
-    }
+  function responseURL(xhr, headers, url) {
+    return 'responseURL' in xhr ? xhr.responseURL : headers.get('X-Request-URL') || normalizeURL(url);
   }
 
   /**
@@ -857,14 +870,14 @@
       normalizeEvents(xhr);
 
       xhr.on('load', function(xhr) {
+        var headers = parseHeaders(xhr);
+        var body = 'response' in xhr ? xhr.response : xhr.responseText;
         var options = {
+          headers: headers,
           status: xhr.status,
           statusText: xhr.statusText,
-          headers: parseHeaders(xhr),
-          url: responseURL(xhr)
+          url: responseURL(xhr, headers, request.url)
         };
-
-        var body = 'response' in xhr ? xhr.response : xhr.responseText;
 
         resolve(new Response(body, options));
       });
