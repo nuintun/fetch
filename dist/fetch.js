@@ -489,34 +489,38 @@
    * @param {any} body
    */
   Body.prototype._initBody = function(body) {
-    this._bodyInit = body;
+    this.body = body;
+
+    var noContentType = !this.headers.has('Content-Type');
 
     if (typeOf(body) === 'string') {
       this._bodyText = body;
+
+      if (noContentType) {
+        this.headers.set('Content-Type', 'text/plain;charset=UTF-8');
+      }
     } else if (supportBlob && Blob.prototype.isPrototypeOf(body)) {
       this._bodyBlob = body;
+
+      if (noContentType && this._bodyBlob.type) {
+        this.headers.set('Content-Type', this._bodyBlob.type);
+      }
     } else if (supportFormData && FormData.prototype.isPrototypeOf(body)) {
       this._bodyFormData = body;
     } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
       this._bodyText = body.toString();
+
+      if (noContentType) {
+        this.headers.set('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+      }
     } else if (supportArrayBuffer && supportBlob && isDataView(body)) {
       this._bodyArrayBuffer = bufferClone(body.buffer);
       // IE 10-11 can't handle a DataView body.
-      this._bodyInit = new Blob([this._bodyArrayBuffer]);
+      this.body = new Blob([this._bodyArrayBuffer]);
     } else if (supportArrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
       this._bodyArrayBuffer = bufferClone(body);
     } else {
-      this._bodyInit = null;
-    }
-
-    if (!this.headers.get('Content-Type')) {
-      if (typeOf(body) === 'string') {
-        this.headers.set('Content-Type', 'text/plain;charset=UTF-8');
-      } else if (this._bodyBlob && this._bodyBlob.type) {
-        this.headers.set('Content-Type', this._bodyBlob.type);
-      } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-        this.headers.set('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
-      }
+      this.body = null;
     }
   };
 
@@ -537,7 +541,7 @@
       } else if (this._bodyArrayBuffer) {
         return Promise.resolve(new Blob([this._bodyArrayBuffer]));
       } else if (this._bodyFormData) {
-        throw Promise.reject(new Error('Could not read FormData body as blob'));
+        return Promise.reject(new Error('Could not read FormData body as blob'));
       } else {
         return Promise.resolve(new Blob([this._bodyText]));
       }
@@ -572,7 +576,7 @@
     } else if (this._bodyArrayBuffer) {
       return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
     } else if (this._bodyFormData) {
-      throw Promise.reject(new Error('Could not read FormData body as text'));
+      return Promise.reject(new Error('Could not read FormData body as text'));
     } else {
       return Promise.resolve(this._bodyText);
     }
@@ -644,8 +648,8 @@
       this.method = input.method;
       this.mode = input.mode;
 
-      if (!body && input._bodyInit !== null) {
-        body = input._bodyInit;
+      if (!body && input.body !== null) {
+        body = input.body;
         input.bodyUsed = true;
       }
     } else {
@@ -676,7 +680,7 @@
    * @returns {Request}
    */
   Request.prototype.clone = function() {
-    return new Request(this, { body: this._bodyInit });
+    return new Request(this, { body: this.body });
   };
 
   window.Request = Request;
@@ -724,7 +728,7 @@
    * @returns {Response}
    */
   Response.prototype.clone = function() {
-    return new Response(this._bodyInit, {
+    return new Response(this.body, {
       status: this.status,
       statusText: this.statusText,
       headers: new Headers(this.headers),
@@ -859,7 +863,7 @@
    * @param {Request} request
    */
   function send(xhr, request) {
-    xhr.send(request._bodyInit === undefined ? null : request._bodyInit);
+    xhr.send(request.body === undefined ? null : request.body);
   }
 
   /**

@@ -50,8 +50,8 @@ export default function Request(input, options) {
     this.method = input.method;
     this.mode = input.mode;
 
-    if (!body && input._bodyInit !== null) {
-      body = input._bodyInit;
+    if (!body && input.body !== null) {
+      body = input.body;
       input.bodyUsed = true;
     }
   } else {
@@ -82,7 +82,7 @@ extend(Body, Request);
  * @returns {Request}
  */
 Request.prototype.clone = function() {
-  return new Request(this, { body: this._bodyInit });
+  return new Request(this, { body: this.body });
 };
 
 window.Request = Request;

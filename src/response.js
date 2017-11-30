@@ -45,7 +45,7 @@ extend(Body, Response);
  * @returns {Response}
  */
 Response.prototype.clone = function() {
-  return new Response(this._bodyInit, {
+  return new Response(this.body, {
     status: this.status,
     statusText: this.statusText,
     headers: new Headers(this.headers),

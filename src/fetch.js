@@ -103,7 +103,7 @@ function isUseXDomainRequest(request) {
  * @param {Request} request
  */
 function send(xhr, request) {
-  xhr.send(request._bodyInit === undefined ? null : request._bodyInit);
+  xhr.send(request.body === undefined ? null : request.body);
 }
 
 /**
