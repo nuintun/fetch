@@ -491,9 +491,7 @@
   Body.prototype._initBody = function(body) {
     this._bodyInit = body;
 
-    if (!body) {
-      this._bodyText = '';
-    } else if (typeOf(body) === 'string') {
+    if (typeOf(body) === 'string') {
       this._bodyText = body;
     } else if (supportBlob && Blob.prototype.isPrototypeOf(body)) {
       this._bodyBlob = body;
@@ -508,7 +506,7 @@
     } else if (supportArrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
       this._bodyArrayBuffer = bufferClone(body);
     } else {
-      throw new Error('Unsupported BodyInit type');
+      this._bodyInit = null;
     }
 
     if (!this.headers.get('Content-Type')) {
