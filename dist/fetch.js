@@ -164,9 +164,10 @@
     var length = items.length;
     var iterator = {
       next: function() {
-        var value = items[index++];
+        var done = index >= length;
+        var value = !done ? items[index++] : undefined;
 
-        return { done: index > length, value: value };
+        return { done: done, value: value };
       }
     };
 
