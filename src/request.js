@@ -49,6 +49,7 @@ export default function Request(input, options) {
 
     this.method = input.method;
     this.mode = input.mode;
+    this.referrer = input.referrer;
 
     if (!body && input.body !== null) {
       body = input.body;
@@ -65,8 +66,8 @@ export default function Request(input, options) {
   }
 
   this.method = normalizeMethod(options.method || this.method || 'GET');
-  this.mode = options.mode || this.mode || null;
-  this.referrer = null;
+  this.mode = options.mode || this.mode || 'cors';
+  this.referrer = options.referrer || this.referrer || 'about:client';
 
   if ((this.method === 'GET' || this.method === 'HEAD') && body) {
     throw new TypeError('Request with GET/HEAD method cannot have body');
