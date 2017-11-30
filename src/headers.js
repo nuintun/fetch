@@ -5,10 +5,15 @@
  */
 
 import { typeOf } from './utils';
-import { supportHeaders, supportIterable } from './support';
+import { supportIterable } from './support';
 
+/**
+ * @function normalizeName
+ * @param {string} name
+ * @returns {string}
+ */
 function normalizeName(name) {
-  if (typeof name !== 'string') {
+  if (typeOf(name) !== 'string') {
     name = String(name);
   }
 
@@ -19,15 +24,25 @@ function normalizeName(name) {
   return name.toLowerCase();
 }
 
+/**
+ * @function normalizeValue
+ * @param {string} value
+ * @returns {string}
+ */
 function normalizeValue(value) {
-  if (typeof value !== 'string') {
+  if (typeOf(value) !== 'string') {
     value = String(value);
   }
 
   return value;
 }
 
-// Build a destructive iterator for the value list
+/**
+ * @function iteratorFor
+ * @description Build a destructive iterator for the value list
+ * @param {Array} items
+ * @returns {Object}
+ */
 function iteratorFor(items) {
   var index = 0;
   var length = items.length;
@@ -50,9 +65,10 @@ function iteratorFor(items) {
 
 /**
  * @class Headers
+ * @constructor
  * @param {Object} headers
  */
-function Headers(headers) {
+export default function Headers(headers) {
   this.map = {};
 
   if (headers instanceof Headers) {
@@ -68,51 +84,74 @@ function Headers(headers) {
   }
 }
 
+/**
+ * @method append
+ * @param {string} name
+ * @param {string} value
+ */
 Headers.prototype.append = function(name, value) {
   name = normalizeName(name);
   value = normalizeValue(value);
 
-  var list = this.map[name];
+  var oldValue = this.map[name];
 
-  if (!list) {
-    list = [];
-    this.map[name] = list;
-  }
-
-  list.push(value);
+  this.map[name] = oldValue ? oldValue + ',' + value : value;
 };
 
+/**
+ * @method delete
+ * @param {string} name
+ */
 Headers.prototype['delete'] = function(name) {
   delete this.map[normalizeName(name)];
 };
 
+/**
+ * @method get
+ * @param {string} name
+ * @returns {string}
+ */
 Headers.prototype.get = function(name) {
-  var values = this.map[normalizeName(name)];
-  return values ? values[0] : null;
+  name = normalizeName(name);
+
+  return this.has(name) ? this.map[name] : null;
 };
 
-Headers.prototype.getAll = function(name) {
-  return this.map[normalizeName(name)] || [];
-};
-
+/**
+ * @method has
+ * @param {string} name
+ * @returns {boolean}
+ */
 Headers.prototype.has = function(name) {
   return this.map.hasOwnProperty(normalizeName(name));
 };
 
+/**
+ * @method set
+ * @param {string} name
+ * @param {string} value
+ */
 Headers.prototype.set = function(name, value) {
-  this.map[normalizeName(name)] = [normalizeValue(value)];
+  this.map[normalizeName(name)] = normalizeValue(value);
 };
 
+/**
+ * @method forEach
+ * @param {Function} callback
+ * @param {any} context
+ */
 Headers.prototype.forEach = function(callback, context) {
   for (var name in this.map) {
     if (this.map.hasOwnProperty(name)) {
-      this.map[name].forEach(function(value) {
-        callback.call(context, value, name, this);
-      }, this);
+      callback.call(context, this.map[name], name, this);
     }
   }
 };
 
+/**
+ * @method keys
+ * @returns {Array}
+ */
 Headers.prototype.keys = function() {
   var items = [];
 
@@ -123,6 +162,10 @@ Headers.prototype.keys = function() {
   return iteratorFor(items);
 };
 
+/**
+ * @method values
+ * @returns {Array}
+ */
 Headers.prototype.values = function() {
   var items = [];
 
@@ -133,6 +176,10 @@ Headers.prototype.values = function() {
   return iteratorFor(items);
 };
 
+/**
+ * @method entries
+ * @returns {Array}
+ */
 Headers.prototype.entries = function() {
   var items = [];
 
@@ -147,8 +194,4 @@ if (supportIterable) {
   Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
 }
 
-if (!supportHeaders) {
-  window.Headers = Headers;
-}
-
-export default window.Headers;
+window.Headers = Headers;

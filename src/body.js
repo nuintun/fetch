@@ -20,24 +20,42 @@ if (supportArrayBuffer) {
     '[object Float64Array]'
   ];
 
-  var isDataView = function(obj) {
-    return obj && DataView.prototype.isPrototypeOf(obj);
+  /**
+   * @function isDataView
+   * @param {Object} object
+   */
+  var isDataView = function(object) {
+    return object && DataView.prototype.isPrototypeOf(object);
   };
 
+  /**
+   * @function isArrayBufferView
+   * @param {Object} object
+   */
   var isArrayBufferView =
     ArrayBuffer.isView ||
-    function(obj) {
-      return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1;
+    function(object) {
+      return object && viewClasses.indexOf(Object.prototype.toString.call(object)) > -1;
     };
 }
 
+/**
+ * @function consumed
+ * @param {Body} body
+ */
 function consumed(body) {
   if (body.bodyUsed) {
     return Promise.reject(new TypeError('Already read'));
   }
+
   body.bodyUsed = true;
 }
 
+/**
+ * @function fileReaderReady
+ * @param {FileReader} reader
+ * @returns {Promise}
+ */
 function fileReaderReady(reader) {
   return new Promise(function(resolve, reject) {
     reader.onload = function() {
@@ -50,6 +68,11 @@ function fileReaderReady(reader) {
   });
 }
 
+/**
+ * @function readBlobAsArrayBuffer
+ * @param {Blob} blob
+ * @returns {Promise}
+ */
 function readBlobAsArrayBuffer(blob) {
   var reader = new FileReader();
   var promise = fileReaderReady(reader);
@@ -59,6 +82,11 @@ function readBlobAsArrayBuffer(blob) {
   return promise;
 }
 
+/**
+ * @function readBlobAsText
+ * @param {Blob} blob
+ * @returns {Promise}
+ */
 function readBlobAsText(blob) {
   var reader = new FileReader();
   var promise = fileReaderReady(reader);
@@ -68,8 +96,13 @@ function readBlobAsText(blob) {
   return promise;
 }
 
-function readArrayBufferAsText(buf) {
-  var view = new Uint8Array(buf);
+/**
+ * @function readArrayBufferAsText
+ * @param {ArrayBuffer} buffer
+ * @returns {string}
+ */
+function readArrayBufferAsText(buffer) {
+  var view = new Uint8Array(buffer);
   var chars = new Array(view.length);
 
   for (var i = 0; i < view.length; i++) {
@@ -79,18 +112,28 @@ function readArrayBufferAsText(buf) {
   return chars.join('');
 }
 
-function bufferClone(buf) {
-  if (buf.slice) {
-    return buf.slice(0);
+/**
+ * @function bufferClone
+ * @param {ArrayBuffer} buffer
+ * @returns {ArrayBuffer}
+ */
+function bufferClone(buffer) {
+  if (buffer.slice) {
+    return buffer.slice(0);
   } else {
-    var view = new Uint8Array(buf.byteLength);
+    var view = new Uint8Array(buffer.byteLength);
 
-    view.set(new Uint8Array(buf));
+    view.set(new Uint8Array(buffer));
 
     return view.buffer;
   }
 }
 
+/**
+ * @function decode
+ * @param {string} body
+ * @returns {FormData}
+ */
 function decode(body) {
   var form = new FormData();
 
@@ -102,6 +145,7 @@ function decode(body) {
         var split = bytes.split('=');
         var name = split.shift().replace(/\+/g, ' ');
         var value = split.join('=').replace(/\+/g, ' ');
+
         form.append(decodeURIComponent(name), decodeURIComponent(value));
       }
     });
@@ -111,11 +155,17 @@ function decode(body) {
 
 /**
  * @class Body
+ * @constructor
  */
 export default function Body() {
   this.bodyUsed = false;
 }
 
+/**
+ * @method _initBody
+ * @private
+ * @param {any} body
+ */
 Body.prototype._initBody = function(body) {
   this._bodyInit = body;
 
@@ -151,6 +201,10 @@ Body.prototype._initBody = function(body) {
 };
 
 if (supportBlob) {
+  /**
+   * @method blob
+   * @returns {Promise}
+   */
   Body.prototype.blob = function() {
     var rejected = consumed(this);
 
@@ -169,6 +223,10 @@ if (supportBlob) {
     }
   };
 
+  /**
+   * @method arrayBuffer
+   * @returns {Promise}
+   */
   Body.prototype.arrayBuffer = function() {
     if (this._bodyArrayBuffer) {
       return consumed(this) || Promise.resolve(this._bodyArrayBuffer);
@@ -178,8 +236,13 @@ if (supportBlob) {
   };
 }
 
+/**
+ * @method text
+ * @returns {Promise}
+ */
 Body.prototype.text = function() {
   var rejected = consumed(this);
+
   if (rejected) {
     return rejected;
   }
@@ -196,11 +259,19 @@ Body.prototype.text = function() {
 };
 
 if (supportFormData) {
+  /**
+   * @method formData
+   * @returns {Promise}
+   */
   Body.prototype.formData = function() {
     return this.text().then(decode);
   };
 }
 
+/**
+ * @method json
+ * @returns {Promise}
+ */
 Body.prototype.json = function() {
   return this.text().then(JSON.parse);
 };

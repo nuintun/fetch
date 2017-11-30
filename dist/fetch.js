@@ -1,6 +1,8 @@
 (function () {
   'use strict';
 
+  if (window.fetch) return;
+
   /**
    * @module utils
    * @license MIT
@@ -89,16 +91,13 @@
    * @version 2017/11/29
    */
 
-  var supportFetch = isNativeMethod(window.fetch);
-  var supportHeaders = isNativeMethod(window.Headers);
-  var supportRequest = isNativeMethod(window.Request);
-  var supportResponse = isNativeMethod(window.Response);
   var supportFormData = isNativeMethod(window.FormData);
   var supportArrayBuffer = isNativeMethod(window.ArrayBuffer);
   var supportSearchParams = isNativeMethod(window.URLSearchParams);
-  var supportXMLHttpRequest = isNativeMethod(window.XMLHttpRequest);
   var supportBlob = isNativeMethod(window.FileReader) && isNativeMethod(window.Blob);
   var supportIterable = isNativeMethod(window.Symbol) && 'iterator' in window.Symbol;
+  // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
+  var supportXDomainRequest = isNativeMethod(window.VBArray) && document.documentMode < 10;
 
   /**
    * @module headers
@@ -106,8 +105,13 @@
    * @version 2017/11/28
    */
 
+  /**
+   * @function normalizeName
+   * @param {string} name
+   * @returns {string}
+   */
   function normalizeName(name) {
-    if (typeof name !== 'string') {
+    if (typeOf(name) !== 'string') {
       name = String(name);
     }
 
@@ -118,15 +122,25 @@
     return name.toLowerCase();
   }
 
+  /**
+   * @function normalizeValue
+   * @param {string} value
+   * @returns {string}
+   */
   function normalizeValue(value) {
-    if (typeof value !== 'string') {
+    if (typeOf(value) !== 'string') {
       value = String(value);
     }
 
     return value;
   }
 
-  // Build a destructive iterator for the value list
+  /**
+   * @function iteratorFor
+   * @description Build a destructive iterator for the value list
+   * @param {Array} items
+   * @returns {Object}
+   */
   function iteratorFor(items) {
     var index = 0;
     var length = items.length;
@@ -149,6 +163,7 @@
 
   /**
    * @class Headers
+   * @constructor
    * @param {Object} headers
    */
   function Headers(headers) {
@@ -167,51 +182,74 @@
     }
   }
 
+  /**
+   * @method append
+   * @param {string} name
+   * @param {string} value
+   */
   Headers.prototype.append = function(name, value) {
     name = normalizeName(name);
     value = normalizeValue(value);
 
-    var list = this.map[name];
+    var oldValue = this.map[name];
 
-    if (!list) {
-      list = [];
-      this.map[name] = list;
-    }
-
-    list.push(value);
+    this.map[name] = oldValue ? oldValue + ',' + value : value;
   };
 
+  /**
+   * @method delete
+   * @param {string} name
+   */
   Headers.prototype['delete'] = function(name) {
     delete this.map[normalizeName(name)];
   };
 
+  /**
+   * @method get
+   * @param {string} name
+   * @returns {string}
+   */
   Headers.prototype.get = function(name) {
-    var values = this.map[normalizeName(name)];
-    return values ? values[0] : null;
+    name = normalizeName(name);
+
+    return this.has(name) ? this.map[name] : null;
   };
 
-  Headers.prototype.getAll = function(name) {
-    return this.map[normalizeName(name)] || [];
-  };
-
+  /**
+   * @method has
+   * @param {string} name
+   * @returns {boolean}
+   */
   Headers.prototype.has = function(name) {
     return this.map.hasOwnProperty(normalizeName(name));
   };
 
+  /**
+   * @method set
+   * @param {string} name
+   * @param {string} value
+   */
   Headers.prototype.set = function(name, value) {
-    this.map[normalizeName(name)] = [normalizeValue(value)];
+    this.map[normalizeName(name)] = normalizeValue(value);
   };
 
+  /**
+   * @method forEach
+   * @param {Function} callback
+   * @param {any} context
+   */
   Headers.prototype.forEach = function(callback, context) {
     for (var name in this.map) {
       if (this.map.hasOwnProperty(name)) {
-        this.map[name].forEach(function(value) {
-          callback.call(context, value, name, this);
-        }, this);
+        callback.call(context, this.map[name], name, this);
       }
     }
   };
 
+  /**
+   * @method keys
+   * @returns {Array}
+   */
   Headers.prototype.keys = function() {
     var items = [];
 
@@ -222,6 +260,10 @@
     return iteratorFor(items);
   };
 
+  /**
+   * @method values
+   * @returns {Array}
+   */
   Headers.prototype.values = function() {
     var items = [];
 
@@ -232,6 +274,10 @@
     return iteratorFor(items);
   };
 
+  /**
+   * @method entries
+   * @returns {Array}
+   */
   Headers.prototype.entries = function() {
     var items = [];
 
@@ -246,11 +292,7 @@
     Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
   }
 
-  if (!supportHeaders) {
-    window.Headers = Headers;
-  }
-
-  var Headers$1 = window.Headers;
+  window.Headers = Headers;
 
   /**
    * @module body
@@ -271,24 +313,42 @@
       '[object Float64Array]'
     ];
 
-    var isDataView = function(obj) {
-      return obj && DataView.prototype.isPrototypeOf(obj);
+    /**
+     * @function isDataView
+     * @param {Object} object
+     */
+    var isDataView = function(object) {
+      return object && DataView.prototype.isPrototypeOf(object);
     };
 
+    /**
+     * @function isArrayBufferView
+     * @param {Object} object
+     */
     var isArrayBufferView =
       ArrayBuffer.isView ||
-      function(obj) {
-        return obj && viewClasses.indexOf(Object.prototype.toString.call(obj)) > -1;
+      function(object) {
+        return object && viewClasses.indexOf(Object.prototype.toString.call(object)) > -1;
       };
   }
 
+  /**
+   * @function consumed
+   * @param {Body} body
+   */
   function consumed(body) {
     if (body.bodyUsed) {
       return Promise.reject(new TypeError('Already read'));
     }
+
     body.bodyUsed = true;
   }
 
+  /**
+   * @function fileReaderReady
+   * @param {FileReader} reader
+   * @returns {Promise}
+   */
   function fileReaderReady(reader) {
     return new Promise(function(resolve, reject) {
       reader.onload = function() {
@@ -301,6 +361,11 @@
     });
   }
 
+  /**
+   * @function readBlobAsArrayBuffer
+   * @param {Blob} blob
+   * @returns {Promise}
+   */
   function readBlobAsArrayBuffer(blob) {
     var reader = new FileReader();
     var promise = fileReaderReady(reader);
@@ -310,6 +375,11 @@
     return promise;
   }
 
+  /**
+   * @function readBlobAsText
+   * @param {Blob} blob
+   * @returns {Promise}
+   */
   function readBlobAsText(blob) {
     var reader = new FileReader();
     var promise = fileReaderReady(reader);
@@ -319,8 +389,13 @@
     return promise;
   }
 
-  function readArrayBufferAsText(buf) {
-    var view = new Uint8Array(buf);
+  /**
+   * @function readArrayBufferAsText
+   * @param {ArrayBuffer} buffer
+   * @returns {string}
+   */
+  function readArrayBufferAsText(buffer) {
+    var view = new Uint8Array(buffer);
     var chars = new Array(view.length);
 
     for (var i = 0; i < view.length; i++) {
@@ -330,18 +405,28 @@
     return chars.join('');
   }
 
-  function bufferClone(buf) {
-    if (buf.slice) {
-      return buf.slice(0);
+  /**
+   * @function bufferClone
+   * @param {ArrayBuffer} buffer
+   * @returns {ArrayBuffer}
+   */
+  function bufferClone(buffer) {
+    if (buffer.slice) {
+      return buffer.slice(0);
     } else {
-      var view = new Uint8Array(buf.byteLength);
+      var view = new Uint8Array(buffer.byteLength);
 
-      view.set(new Uint8Array(buf));
+      view.set(new Uint8Array(buffer));
 
       return view.buffer;
     }
   }
 
+  /**
+   * @function decode
+   * @param {string} body
+   * @returns {FormData}
+   */
   function decode(body) {
     var form = new FormData();
 
@@ -353,6 +438,7 @@
           var split = bytes.split('=');
           var name = split.shift().replace(/\+/g, ' ');
           var value = split.join('=').replace(/\+/g, ' ');
+
           form.append(decodeURIComponent(name), decodeURIComponent(value));
         }
       });
@@ -362,11 +448,17 @@
 
   /**
    * @class Body
+   * @constructor
    */
   function Body() {
     this.bodyUsed = false;
   }
 
+  /**
+   * @method _initBody
+   * @private
+   * @param {any} body
+   */
   Body.prototype._initBody = function(body) {
     this._bodyInit = body;
 
@@ -402,6 +494,10 @@
   };
 
   if (supportBlob) {
+    /**
+     * @method blob
+     * @returns {Promise}
+     */
     Body.prototype.blob = function() {
       var rejected = consumed(this);
 
@@ -420,6 +516,10 @@
       }
     };
 
+    /**
+     * @method arrayBuffer
+     * @returns {Promise}
+     */
     Body.prototype.arrayBuffer = function() {
       if (this._bodyArrayBuffer) {
         return consumed(this) || Promise.resolve(this._bodyArrayBuffer);
@@ -429,8 +529,13 @@
     };
   }
 
+  /**
+   * @method text
+   * @returns {Promise}
+   */
   Body.prototype.text = function() {
     var rejected = consumed(this);
+
     if (rejected) {
       return rejected;
     }
@@ -447,11 +552,19 @@
   };
 
   if (supportFormData) {
+    /**
+     * @method formData
+     * @returns {Promise}
+     */
     Body.prototype.formData = function() {
       return this.text().then(decode);
     };
   }
 
+  /**
+   * @method json
+   * @returns {Promise}
+   */
   Body.prototype.json = function() {
     return this.text().then(JSON.parse);
   };
@@ -465,13 +578,20 @@
   // HTTP methods whose capitalization should be normalized
   var methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'];
 
+  /**
+   * @function normalizeMethod
+   * @param {string} method
+   * @returns {string}
+   */
   function normalizeMethod(method) {
     var upcased = method.toUpperCase();
+
     return methods.indexOf(upcased) > -1 ? upcased : method;
   }
 
   /**
    * @class Request
+   * @constructor
    * @param {Request|string} input
    * @param {Object} options
    */
@@ -489,14 +609,14 @@
       this.credentials = input.credentials;
 
       if (!options.headers) {
-        this.headers = new Headers$1(input.headers);
+        this.headers = new Headers(input.headers);
       }
 
       this.method = input.method;
       this.mode = input.mode;
 
       if (!body && input._bodyInit !== null) {
-        body = input._body;
+        body = input._bodyInit;
         input.bodyUsed = true;
       }
     } else {
@@ -506,7 +626,7 @@
     this.credentials = options.credentials || this.credentials || 'omit';
 
     if (options.headers || !this.headers) {
-      this.headers = new Headers$1(options.headers);
+      this.headers = new Headers(options.headers);
     }
 
     this.method = normalizeMethod(options.method || this.method || 'GET');
@@ -522,15 +642,15 @@
 
   extend(Body, Request);
 
+  /**
+   * @method clone
+   * @returns {Request}
+   */
   Request.prototype.clone = function() {
     return new Request(this, { body: this._bodyInit });
   };
 
-  if (!supportRequest) {
-    window.Request = Request;
-  }
-
-  var Request$1 = window.Request;
+  window.Request = Request;
 
   /**
    * @module response
@@ -540,13 +660,12 @@
 
   /**
    * @class Response
+   * @constructor
    * @param {any} body
    * @param {Object} options
    */
   function Response(body, options) {
-    if (!options) {
-      options = {};
-    }
+    options = options || {};
 
     this.type = 'default';
     this.status = options.status === undefined ? 200 : options.status;
@@ -557,8 +676,8 @@
     }
 
     this.ok = this.status >= 200 && this.status < 300;
-    this.statusText = 'statusText' in options ? options.statusText : 'OK';
-    this.headers = options.headers instanceof Headers$1 ? options.headers : new Headers$1(options.headers);
+    this.statusText = options.statusText || 'OK';
+    this.headers = new Headers(options.headers);
     this.url = options.url || '';
 
     this._initBody(body);
@@ -566,15 +685,23 @@
 
   extend(Body, Response);
 
+  /**
+   * @method clone
+   * @returns {Response}
+   */
   Response.prototype.clone = function() {
     return new Response(this._bodyInit, {
       status: this.status,
       statusText: this.statusText,
-      headers: new Headers$1(this.headers),
+      headers: new Headers(this.headers),
       url: this.url
     });
   };
 
+  /**
+   * @method error
+   * @returns {Response}
+   */
   Response.error = function() {
     var response = new Response(null, { status: 0, statusText: '' });
 
@@ -585,6 +712,12 @@
 
   var redirectStatuses = [301, 302, 303, 307, 308];
 
+  /**
+   * @method redirect
+   * @param {string} url
+   * @param {number} status
+   * @returns {Response}
+   */
   Response.redirect = function(url, status) {
     if (redirectStatuses.indexOf(status) === -1) {
       throw new RangeError('Invalid status code');
@@ -593,11 +726,7 @@
     return new Response(null, { status: status, headers: { location: url } });
   };
 
-  if (!supportResponse) {
-    window.Response = Response;
-  }
-
-  var Response$1 = window.Response;
+  window.Response = Response;
 
   /**
    * @module fetch
@@ -612,8 +741,22 @@
   function normalizeEvents(xhr) {
     var events = {};
 
-    ['load', 'error', 'timeout'].forEach(function(method) {
-      xhr['on' + method] = function() {
+    if ('onload' in xhr) {
+      xhr.onload = function() {
+        if (events.load) {
+          events.load(xhr);
+        }
+      };
+    } else {
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && events.load) {
+          events.load(xhr);
+        }
+      };
+    }
+
+    ['error', 'timeout'].forEach(function(method) {
+      xhr['on' + method] = function(e) {
         if (events[method]) {
           events[method](xhr);
         }
@@ -629,8 +772,13 @@
     };
   }
 
+  /**
+   * @function parseHeaders
+   * @param {XMLHttpRequest|XDomainRequest} xhr
+   * @returns {Headers}
+   */
   function parseHeaders(xhr) {
-    var headers = new Headers$1();
+    var headers = new Headers();
 
     if (xhr.getAllResponseHeaders) {
       // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
@@ -641,8 +789,10 @@
       preProcessedHeaders.split(/\r?\n/).forEach(function(line) {
         var parts = line.split(':');
         var key = parts.shift().trim();
+
         if (key) {
           var value = parts.join(':').trim();
+
           headers.append(key, value);
         }
       });
@@ -651,6 +801,11 @@
     return headers;
   }
 
+  /**
+   * @function responseURL
+   * @param {XMLHttpRequest|XDomainRequest} xhr
+   * @returns {string}
+   */
   function responseURL(xhr) {
     if ('responseURL' in xhr) {
       return xhr.responseURL;
@@ -662,21 +817,42 @@
     }
   }
 
+  /**
+   * @function isUseXDomainRequest
+   * @param {Request} request
+   * @returns {boolean}
+   */
+  function isUseXDomainRequest(request) {
+    return supportXDomainRequest && (request.mode === 'cors' || request.credentials === 'include');
+  }
+
+  /**
+   * @function send
+   * @param {XMLHttpRequest|XDomainRequest} xhr
+   * @param {Request} request
+   */
+  function send(xhr, request) {
+    xhr.send(request._bodyInit === undefined ? null : request._bodyInit);
+  }
+
+  /**
+   * @function fetch
+   * @param {Request|string} input
+   * @param {Object|Request} init
+   * @returns {Promise}
+   */
   function fetch(input, init) {
     return new Promise(function(resolve, reject) {
       var request;
 
-      if (!init && init instanceof Request$1) {
+      if (!init && init instanceof Request) {
         request = input;
       } else {
-        request = new Request$1(input, init);
+        request = new Request(input, init);
       }
 
-      var xhr = supportXMLHttpRequest ? new XMLHttpRequest() : new XDomainRequest();
-
-      if (typeOf(request.timeout) === 'number') {
-        xdr.timeout = request.timeout;
-      }
+      var useXDomainRequest = isUseXDomainRequest(request);
+      var xhr = useXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
 
       normalizeEvents(xhr);
 
@@ -690,7 +866,7 @@
 
         var body = 'response' in xhr ? xhr.response : xhr.responseText;
 
-        resolve(new Response$1(body, options));
+        resolve(new Response(body, options));
       });
 
       xhr.on('error', function() {
@@ -702,6 +878,10 @@
       });
 
       xhr.open(request.method, request.url, true);
+
+      if (typeOf(request.timeout) === 'number') {
+        xdr.timeout = request.timeout;
+      }
 
       if (request.credentials === 'include') {
         xhr.withCredentials = true;
@@ -719,14 +899,16 @@
         });
       }
 
-      xhr.send(request._body === undefined ? null : request._body);
+      if (useXDomainRequest) {
+        window.setTimeout(function() {
+          send(xhr, request);
+        }, 0);
+      } else {
+        send(xhr, request);
+      }
     });
   }
 
-  fetch.polyfill = true;
-
-  if (!supportFetch) {
-    window.fetch = fetch;
-  }
+  window.fetch = fetch;
 
 }());

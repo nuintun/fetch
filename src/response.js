@@ -4,20 +4,18 @@
  * @version 2017/11/28
  */
 
-import { supportResponse } from './support';
 import { extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
 /**
  * @class Response
+ * @constructor
  * @param {any} body
  * @param {Object} options
  */
-function Response(body, options) {
-  if (!options) {
-    options = {};
-  }
+export default function Response(body, options) {
+  options = options || {};
 
   this.type = 'default';
   this.status = options.status === undefined ? 200 : options.status;
@@ -28,8 +26,8 @@ function Response(body, options) {
   }
 
   this.ok = this.status >= 200 && this.status < 300;
-  this.statusText = 'statusText' in options ? options.statusText : 'OK';
-  this.headers = options.headers instanceof Headers ? options.headers : new Headers(options.headers);
+  this.statusText = options.statusText || 'OK';
+  this.headers = new Headers(options.headers);
   this.url = options.url || '';
 
   this._initBody(body);
@@ -37,6 +35,10 @@ function Response(body, options) {
 
 extend(Body, Response);
 
+/**
+ * @method clone
+ * @returns {Response}
+ */
 Response.prototype.clone = function() {
   return new Response(this._bodyInit, {
     status: this.status,
@@ -46,6 +48,10 @@ Response.prototype.clone = function() {
   });
 };
 
+/**
+ * @method error
+ * @returns {Response}
+ */
 Response.error = function() {
   var response = new Response(null, { status: 0, statusText: '' });
 
@@ -56,6 +62,12 @@ Response.error = function() {
 
 var redirectStatuses = [301, 302, 303, 307, 308];
 
+/**
+ * @method redirect
+ * @param {string} url
+ * @param {number} status
+ * @returns {Response}
+ */
 Response.redirect = function(url, status) {
   if (redirectStatuses.indexOf(status) === -1) {
     throw new RangeError('Invalid status code');
@@ -64,8 +76,4 @@ Response.redirect = function(url, status) {
   return new Response(null, { status: status, headers: { location: url } });
 };
 
-if (!supportResponse) {
-  window.Response = Response;
-}
-
-export default window.Response;
+window.Response = Response;

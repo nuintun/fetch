@@ -4,7 +4,6 @@
  * @version 2017/11/28
  */
 
-import { supportRequest } from './support';
 import { extend } from './utils';
 import Headers from './headers';
 import Body from './body';
@@ -12,17 +11,24 @@ import Body from './body';
 // HTTP methods whose capitalization should be normalized
 var methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'];
 
+/**
+ * @function normalizeMethod
+ * @param {string} method
+ * @returns {string}
+ */
 function normalizeMethod(method) {
   var upcased = method.toUpperCase();
+
   return methods.indexOf(upcased) > -1 ? upcased : method;
 }
 
 /**
  * @class Request
+ * @constructor
  * @param {Request|string} input
  * @param {Object} options
  */
-function Request(input, options) {
+export default function Request(input, options) {
   options = options || {};
 
   var body = options.body;
@@ -43,7 +49,7 @@ function Request(input, options) {
     this.mode = input.mode;
 
     if (!body && input._bodyInit !== null) {
-      body = input._body;
+      body = input._bodyInit;
       input.bodyUsed = true;
     }
   } else {
@@ -69,12 +75,12 @@ function Request(input, options) {
 
 extend(Body, Request);
 
+/**
+ * @method clone
+ * @returns {Request}
+ */
 Request.prototype.clone = function() {
   return new Request(this, { body: this._bodyInit });
 };
 
-if (!supportRequest) {
-  window.Request = Request;
-}
-
-export default window.Request;
+window.Request = Request;

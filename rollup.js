@@ -13,6 +13,7 @@ const uglify = require('uglify-es');
 rollup
   .rollup({
     legacy: true,
+    context: 'window',
     input: 'src/fetch.js'
   })
   .then(bundle => {
@@ -27,9 +28,11 @@ rollup
 
       bundle
         .generate({
+          name: 'fetch',
           format: 'iife',
           indent: true,
-          strict: true
+          strict: true,
+          intro: 'if (window.fetch) return;'
         })
         .then(result => {
           fs.writeFileSync(src, result.code);

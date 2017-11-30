@@ -8,7 +8,7 @@ import Request from './request';
 import Response from './response';
 import Headers from './headers';
 import { typeOf } from './utils';
-import { supportFetch, supportBlob, supportXMLHttpRequest, supportSearchParams } from './support';
+import { supportBlob, supportXDomainRequest, supportSearchParams } from './support';
 
 /**
  * @function normalizeEvents
@@ -17,8 +17,22 @@ import { supportFetch, supportBlob, supportXMLHttpRequest, supportSearchParams }
 function normalizeEvents(xhr) {
   var events = {};
 
-  ['load', 'error', 'timeout'].forEach(function(method) {
-    xhr['on' + method] = function() {
+  if ('onload' in xhr) {
+    xhr.onload = function() {
+      if (events.load) {
+        events.load(xhr);
+      }
+    };
+  } else {
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && events.load) {
+        events.load(xhr);
+      }
+    };
+  }
+
+  ['error', 'timeout'].forEach(function(method) {
+    xhr['on' + method] = function(e) {
       if (events[method]) {
         events[method](xhr);
       }
@@ -34,6 +48,11 @@ function normalizeEvents(xhr) {
   };
 }
 
+/**
+ * @function parseHeaders
+ * @param {XMLHttpRequest|XDomainRequest} xhr
+ * @returns {Headers}
+ */
 function parseHeaders(xhr) {
   var headers = new Headers();
 
@@ -46,8 +65,10 @@ function parseHeaders(xhr) {
     preProcessedHeaders.split(/\r?\n/).forEach(function(line) {
       var parts = line.split(':');
       var key = parts.shift().trim();
+
       if (key) {
         var value = parts.join(':').trim();
+
         headers.append(key, value);
       }
     });
@@ -56,6 +77,11 @@ function parseHeaders(xhr) {
   return headers;
 }
 
+/**
+ * @function responseURL
+ * @param {XMLHttpRequest|XDomainRequest} xhr
+ * @returns {string}
+ */
 function responseURL(xhr) {
   if ('responseURL' in xhr) {
     return xhr.responseURL;
@@ -67,6 +93,30 @@ function responseURL(xhr) {
   }
 }
 
+/**
+ * @function isUseXDomainRequest
+ * @param {Request} request
+ * @returns {boolean}
+ */
+function isUseXDomainRequest(request) {
+  return supportXDomainRequest && (request.mode === 'cors' || request.credentials === 'include');
+}
+
+/**
+ * @function send
+ * @param {XMLHttpRequest|XDomainRequest} xhr
+ * @param {Request} request
+ */
+function send(xhr, request) {
+  xhr.send(request._bodyInit === undefined ? null : request._bodyInit);
+}
+
+/**
+ * @function fetch
+ * @param {Request|string} input
+ * @param {Object|Request} init
+ * @returns {Promise}
+ */
 function fetch(input, init) {
   return new Promise(function(resolve, reject) {
     var request;
@@ -77,11 +127,8 @@ function fetch(input, init) {
       request = new Request(input, init);
     }
 
-    var xhr = supportXMLHttpRequest ? new XMLHttpRequest() : new XDomainRequest();
-
-    if (typeOf(request.timeout) === 'number') {
-      xdr.timeout = request.timeout;
-    }
+    var useXDomainRequest = isUseXDomainRequest(request);
+    var xhr = useXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
 
     normalizeEvents(xhr);
 
@@ -108,6 +155,10 @@ function fetch(input, init) {
 
     xhr.open(request.method, request.url, true);
 
+    if (typeOf(request.timeout) === 'number') {
+      xdr.timeout = request.timeout;
+    }
+
     if (request.credentials === 'include') {
       xhr.withCredentials = true;
     } else if (request.credentials === 'omit') {
@@ -124,12 +175,14 @@ function fetch(input, init) {
       });
     }
 
-    xhr.send(request._body === undefined ? null : request._body);
+    if (useXDomainRequest) {
+      window.setTimeout(function() {
+        send(xhr, request);
+      }, 0);
+    } else {
+      send(xhr, request);
+    }
   });
 }
 
-fetch.polyfill = true;
-
-if (!supportFetch) {
-  window.fetch = fetch;
-}
+window.fetch = fetch;
