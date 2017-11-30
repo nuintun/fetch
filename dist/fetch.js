@@ -85,6 +85,7 @@
     return NATIVE_RE.test(FPToString.call(value));
   }
 
+  var host = location.host;
   var A = document.createElement('a');
 
   /**
@@ -94,6 +95,10 @@
    */
   function normalizeURL(href) {
     A.href = href;
+
+    if (!A.host) {
+      A.host = host;
+    }
 
     return A.href;
   }
@@ -925,7 +930,7 @@
       }
 
       if (useXDomainRequest) {
-        window.setTimeout(function() {
+        setTimeout(function() {
           send(xhr, request);
         }, 0);
       } else {

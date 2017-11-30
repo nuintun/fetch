@@ -173,7 +173,7 @@ function fetch(input, init) {
     }
 
     if (useXDomainRequest) {
-      window.setTimeout(function() {
+      setTimeout(function() {
         send(xhr, request);
       }, 0);
     } else {

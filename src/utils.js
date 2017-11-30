@@ -80,6 +80,7 @@ export function isNativeMethod(value) {
   return NATIVE_RE.test(FPToString.call(value));
 }
 
+var host = location.host;
 var A = document.createElement('a');
 
 /**
@@ -89,6 +90,10 @@ var A = document.createElement('a');
  */
 export function normalizeURL(href) {
   A.href = href;
+
+  if (!A.host) {
+    A.host = host;
+  }
 
   return A.href;
 }
