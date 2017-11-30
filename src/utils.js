@@ -4,7 +4,7 @@
  * @version 2017/11/28
  */
 
-var toString = Object.prototype.toString;
+export var toString = Object.prototype.toString;
 
 /**
  * @function typeOf
@@ -46,38 +46,6 @@ export function extend(superclass, subclass) {
   }
 
   subclass.prototype.constructor = subclass;
-}
-
-var FPToString = Function.prototype.toString;
-
-// Native function RegExp
-// @see https://github.com/kgryte/regex-native-function/blob/master/lib/index.js
-var NATIVE_RE = '';
-
-// Use a native function as a template...
-NATIVE_RE += FPToString.call(Function);
-// Escape special RegExp characters...
-NATIVE_RE = NATIVE_RE.replace(/([.*+?^=!:$(){}|[\]\/\\])/g, '\\$1');
-// Replace any mentions of `Function` to make template generic.
-// Replace `for ...` and additional info provided in other environments, such as Rhino (see lodash).
-NATIVE_RE = NATIVE_RE.replace(/Function|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?');
-// Bracket the regex:
-NATIVE_RE = '^' + NATIVE_RE + '$';
-
-// Get RegExp
-NATIVE_RE = new RegExp(NATIVE_RE);
-
-/**
- * @function isNativeMethod
- * @param {any} value
- * @returns {boolean}
- */
-export function isNativeMethod(value) {
-  if (typeOf(value) !== 'function') {
-    return false;
-  }
-
-  return NATIVE_RE.test(FPToString.call(value));
 }
 
 var host = location.host;

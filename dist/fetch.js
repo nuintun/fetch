@@ -53,38 +53,6 @@
     subclass.prototype.constructor = subclass;
   }
 
-  var FPToString = Function.prototype.toString;
-
-  // Native function RegExp
-  // @see https://github.com/kgryte/regex-native-function/blob/master/lib/index.js
-  var NATIVE_RE = '';
-
-  // Use a native function as a template...
-  NATIVE_RE += FPToString.call(Function);
-  // Escape special RegExp characters...
-  NATIVE_RE = NATIVE_RE.replace(/([.*+?^=!:$(){}|[\]\/\\])/g, '\\$1');
-  // Replace any mentions of `Function` to make template generic.
-  // Replace `for ...` and additional info provided in other environments, such as Rhino (see lodash).
-  NATIVE_RE = NATIVE_RE.replace(/Function|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?');
-  // Bracket the regex:
-  NATIVE_RE = '^' + NATIVE_RE + '$';
-
-  // Get RegExp
-  NATIVE_RE = new RegExp(NATIVE_RE);
-
-  /**
-   * @function isNativeMethod
-   * @param {any} value
-   * @returns {boolean}
-   */
-  function isNativeMethod(value) {
-    if (typeOf(value) !== 'function') {
-      return false;
-    }
-
-    return NATIVE_RE.test(FPToString.call(value));
-  }
-
   var host = location.host;
   var A = document.createElement('a');
 
@@ -109,13 +77,13 @@
    * @version 2017/11/29
    */
 
-  var supportFormData = isNativeMethod(window.FormData);
-  var supportArrayBuffer = isNativeMethod(window.ArrayBuffer);
-  var supportSearchParams = isNativeMethod(window.URLSearchParams);
-  var supportBlob = isNativeMethod(window.FileReader) && isNativeMethod(window.Blob);
-  var supportIterable = isNativeMethod(window.Symbol) && 'iterator' in window.Symbol;
+  var supportFormData = 'FormData' in window;
+  var supportArrayBuffer = 'ArrayBuffer' in window;
+  var supportSearchParams = 'URLSearchParams' in window;
+  var supportBlob = 'FileReader' in window && 'Blob' in window;
+  var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
   // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
-  var supportXDomainRequest = isNativeMethod(window.VBArray) && document.documentMode < 10;
+  var supportXDomainRequest = 'VBArray' in window && document.documentMode < 10;
 
   /**
    * @module headers
@@ -357,7 +325,7 @@
     var isArrayBufferView =
       ArrayBuffer.isView ||
       function(object) {
-        return object && viewClasses.indexOf(Object.prototype.toString.call(object)) > -1;
+        return object && viewClasses.indexOf(toString.call(object)) > -1;
       };
   }
 
@@ -367,7 +335,7 @@
    */
   function consumed(body) {
     if (body.bodyUsed) {
-      return Promise.reject(new TypeError('Already read'));
+      throw new TypeError('Already read');
     }
 
     body.bodyUsed = true;
@@ -530,18 +498,14 @@
      * @returns {Promise}
      */
     Body.prototype.blob = function() {
-      var rejected = consumed(this);
-
-      if (rejected) {
-        return rejected;
-      }
+      consumed(this);
 
       if (this._bodyBlob) {
         return Promise.resolve(this._bodyBlob);
       } else if (this._bodyArrayBuffer) {
         return Promise.resolve(new Blob([this._bodyArrayBuffer]));
       } else if (this._bodyFormData) {
-        return Promise.reject(new Error('Could not read FormData body as blob'));
+        throw new Error('Could not read FormData body as blob');
       } else {
         return Promise.resolve(new Blob([this._bodyText]));
       }
@@ -553,7 +517,9 @@
      */
     Body.prototype.arrayBuffer = function() {
       if (this._bodyArrayBuffer) {
-        return consumed(this) || Promise.resolve(this._bodyArrayBuffer);
+        consumed(this);
+
+        return Promise.resolve(this._bodyArrayBuffer);
       } else {
         return this.blob().then(readBlobAsArrayBuffer);
       }
@@ -565,18 +531,14 @@
    * @returns {Promise}
    */
   Body.prototype.text = function() {
-    var rejected = consumed(this);
-
-    if (rejected) {
-      return rejected;
-    }
+    consumed(this);
 
     if (this._bodyBlob) {
       return readBlobAsText(this._bodyBlob);
     } else if (this._bodyArrayBuffer) {
       return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
     } else if (this._bodyFormData) {
-      return Promise.reject(new Error('Could not read FormData body as text'));
+      throw new Error('Could not read FormData body as text');
     } else {
       return Promise.resolve(this._bodyText);
     }
@@ -667,7 +629,7 @@
     this.referrer = null;
 
     if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-      throw new TypeError('Body not allowed for GET or HEAD requests');
+      throw new TypeError('Request with GET/HEAD method cannot have body');
     }
 
     this._initBody(body);

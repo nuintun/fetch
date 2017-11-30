@@ -4,7 +4,7 @@
  * @version 2017/11/28
  */
 
-import { typeOf } from './utils';
+import { toString, typeOf } from './utils';
 import { supportBlob, supportFormData, supportSearchParams, supportArrayBuffer } from './support';
 
 if (supportArrayBuffer) {
@@ -35,7 +35,7 @@ if (supportArrayBuffer) {
   var isArrayBufferView =
     ArrayBuffer.isView ||
     function(object) {
-      return object && viewClasses.indexOf(Object.prototype.toString.call(object)) > -1;
+      return object && viewClasses.indexOf(toString.call(object)) > -1;
     };
 }
 
@@ -45,7 +45,7 @@ if (supportArrayBuffer) {
  */
 function consumed(body) {
   if (body.bodyUsed) {
-    return Promise.reject(new TypeError('Already read'));
+    throw new TypeError('Already read');
   }
 
   body.bodyUsed = true;
@@ -208,18 +208,14 @@ if (supportBlob) {
    * @returns {Promise}
    */
   Body.prototype.blob = function() {
-    var rejected = consumed(this);
-
-    if (rejected) {
-      return rejected;
-    }
+    consumed(this);
 
     if (this._bodyBlob) {
       return Promise.resolve(this._bodyBlob);
     } else if (this._bodyArrayBuffer) {
       return Promise.resolve(new Blob([this._bodyArrayBuffer]));
     } else if (this._bodyFormData) {
-      return Promise.reject(new Error('Could not read FormData body as blob'));
+      throw new Error('Could not read FormData body as blob');
     } else {
       return Promise.resolve(new Blob([this._bodyText]));
     }
@@ -231,7 +227,9 @@ if (supportBlob) {
    */
   Body.prototype.arrayBuffer = function() {
     if (this._bodyArrayBuffer) {
-      return consumed(this) || Promise.resolve(this._bodyArrayBuffer);
+      consumed(this);
+
+      return Promise.resolve(this._bodyArrayBuffer);
     } else {
       return this.blob().then(readBlobAsArrayBuffer);
     }
@@ -243,18 +241,14 @@ if (supportBlob) {
  * @returns {Promise}
  */
 Body.prototype.text = function() {
-  var rejected = consumed(this);
-
-  if (rejected) {
-    return rejected;
-  }
+  consumed(this);
 
   if (this._bodyBlob) {
     return readBlobAsText(this._bodyBlob);
   } else if (this._bodyArrayBuffer) {
     return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
   } else if (this._bodyFormData) {
-    return Promise.reject(new Error('Could not read FormData body as text'));
+    throw new Error('Could not read FormData body as text');
   } else {
     return Promise.resolve(this._bodyText);
   }

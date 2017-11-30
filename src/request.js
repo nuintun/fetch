@@ -69,7 +69,7 @@ export default function Request(input, options) {
   this.referrer = null;
 
   if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-    throw new TypeError('Body not allowed for GET or HEAD requests');
+    throw new TypeError('Request with GET/HEAD method cannot have body');
   }
 
   this._initBody(body);
