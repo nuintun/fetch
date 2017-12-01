@@ -23,6 +23,7 @@ if (supportArrayBuffer) {
   /**
    * @function isDataView
    * @param {Object} object
+   * @returns {boolean}
    */
   var isDataView = function(object) {
     return object && DataView.prototype.isPrototypeOf(object);
@@ -31,6 +32,7 @@ if (supportArrayBuffer) {
   /**
    * @function isArrayBufferView
    * @param {Object} object
+   * @returns {boolean}
    */
   var isArrayBufferView =
     ArrayBuffer.isView ||

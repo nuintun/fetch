@@ -7,8 +7,8 @@
 import Request from './request';
 import Response from './response';
 import Headers from './headers';
-import { typeOf, normalizeURL } from './utils';
-import { supportBlob, supportXDomainRequest, supportSearchParams } from './support';
+import { typeOf } from './utils';
+import { supportBlob, supportXDomainRequest } from './support';
 
 /**
  * @function normalizeEvents
@@ -81,11 +81,10 @@ function parseHeaders(xhr) {
  * @function responseURL
  * @param {XMLHttpRequest|XDomainRequest} xhr
  * @param {Headers} headers
- * @param {string} url
  * @returns {string}
  */
 function responseURL(xhr, headers, url) {
-  return 'responseURL' in xhr ? xhr.responseURL : headers.get('X-Request-URL') || normalizeURL(url);
+  return 'responseURL' in xhr ? xhr.responseURL : headers.get('X-Request-URL');
 }
 
 /**
@@ -134,7 +133,7 @@ function fetch(input, init) {
         headers: headers,
         status: xhr.status,
         statusText: xhr.statusText,
-        url: responseURL(xhr, headers, request.url)
+        url: responseURL(xhr, headers) || request.url
       };
 
       resolve(new Response(body, options));
@@ -148,11 +147,13 @@ function fetch(input, init) {
       reject(new TypeError('Network request timeout'));
     });
 
-    xhr.open(request.method, request.url, true);
+    var timeout = request.timeout;
 
-    if (typeOf(request.timeout) === 'number') {
-      xdr.timeout = request.timeout;
+    if (typeOf(timeout) === 'number' && timeout > 0) {
+      xhr.timeout = timeout;
     }
+
+    xhr.open(request.method, request.url, true);
 
     if (request.credentials === 'include') {
       xhr.withCredentials = true;

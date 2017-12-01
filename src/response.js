@@ -4,7 +4,7 @@
  * @version 2017/11/28
  */
 
-import { extend } from './utils';
+import { normalizeURL, extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
@@ -33,7 +33,7 @@ export default function Response(body, options) {
   this.ok = this.status >= 200 && this.status < 300;
   this.statusText = options.statusText || 'OK';
   this.headers = new Headers(options.headers);
-  this.url = options.url || '';
+  this.url = normalizeURL(options.url || '');
 
   this._initBody(body);
 }

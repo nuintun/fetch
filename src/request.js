@@ -4,7 +4,8 @@
  * @version 2017/11/28
  */
 
-import { extend } from './utils';
+import { supportXDomainRequest } from './support';
+import { normalizeURL, extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
@@ -59,6 +60,7 @@ export default function Request(input, options) {
     this.url = String(input);
   }
 
+  this.url = normalizeURL(this.url);
   this.credentials = options.credentials || this.credentials || 'omit';
 
   if (options.headers || !this.headers) {
@@ -66,7 +68,7 @@ export default function Request(input, options) {
   }
 
   this.method = normalizeMethod(options.method || this.method || 'GET');
-  this.mode = options.mode || this.mode || 'cors';
+  this.mode = options.mode || this.mode || (supportXDomainRequest ? 'no-cors' : 'cors');
   this.referrer = options.referrer || this.referrer || 'about:client';
 
   if ((this.method === 'GET' || this.method === 'HEAD') && body) {

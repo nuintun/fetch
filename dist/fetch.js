@@ -4,6 +4,20 @@
   if (window.fetch) return;
 
   /**
+   * @module support
+   * @license MIT
+   * @version 2017/11/29
+   */
+
+  var supportFormData = 'FormData' in window;
+  var supportArrayBuffer = 'ArrayBuffer' in window;
+  var supportSearchParams = 'URLSearchParams' in window;
+  var supportBlob = 'FileReader' in window && 'Blob' in window;
+  var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
+  // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
+  var supportXDomainRequest = 'VBArray' in window && document.documentMode < 10;
+
+  /**
    * @module utils
    * @license MIT
    * @version 2017/11/28
@@ -70,20 +84,6 @@
 
     return A.href;
   }
-
-  /**
-   * @module support
-   * @license MIT
-   * @version 2017/11/29
-   */
-
-  var supportFormData = 'FormData' in window;
-  var supportArrayBuffer = 'ArrayBuffer' in window;
-  var supportSearchParams = 'URLSearchParams' in window;
-  var supportBlob = 'FileReader' in window && 'Blob' in window;
-  var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
-  // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
-  var supportXDomainRequest = 'VBArray' in window && document.documentMode < 10;
 
   /**
    * @module headers
@@ -313,6 +313,7 @@
     /**
      * @function isDataView
      * @param {Object} object
+     * @returns {boolean}
      */
     var isDataView = function(object) {
       return object && DataView.prototype.isPrototypeOf(object);
@@ -321,6 +322,7 @@
     /**
      * @function isArrayBufferView
      * @param {Object} object
+     * @returns {boolean}
      */
     var isArrayBufferView =
       ArrayBuffer.isView ||
@@ -619,6 +621,7 @@
       this.url = String(input);
     }
 
+    this.url = normalizeURL(this.url);
     this.credentials = options.credentials || this.credentials || 'omit';
 
     if (options.headers || !this.headers) {
@@ -626,7 +629,7 @@
     }
 
     this.method = normalizeMethod(options.method || this.method || 'GET');
-    this.mode = options.mode || this.mode || 'cors';
+    this.mode = options.mode || this.mode || (supportXDomainRequest ? 'no-cors' : 'cors');
     this.referrer = options.referrer || this.referrer || 'about:client';
 
     if ((this.method === 'GET' || this.method === 'HEAD') && body) {
@@ -679,7 +682,7 @@
     this.ok = this.status >= 200 && this.status < 300;
     this.statusText = options.statusText || 'OK';
     this.headers = new Headers(options.headers);
-    this.url = options.url || '';
+    this.url = normalizeURL(options.url || '');
 
     this._initBody(body);
   }
@@ -804,11 +807,10 @@
    * @function responseURL
    * @param {XMLHttpRequest|XDomainRequest} xhr
    * @param {Headers} headers
-   * @param {string} url
    * @returns {string}
    */
   function responseURL(xhr, headers, url) {
-    return 'responseURL' in xhr ? xhr.responseURL : headers.get('X-Request-URL') || normalizeURL(url);
+    return 'responseURL' in xhr ? xhr.responseURL : headers.get('X-Request-URL');
   }
 
   /**
@@ -857,7 +859,7 @@
           headers: headers,
           status: xhr.status,
           statusText: xhr.statusText,
-          url: responseURL(xhr, headers, request.url)
+          url: responseURL(xhr, headers) || request.url
         };
 
         resolve(new Response(body, options));
@@ -871,11 +873,13 @@
         reject(new TypeError('Network request timeout'));
       });
 
-      xhr.open(request.method, request.url, true);
+      var timeout = request.timeout;
 
-      if (typeOf(request.timeout) === 'number') {
-        xdr.timeout = request.timeout;
+      if (typeOf(timeout) === 'number' && timeout > 0) {
+        xhr.timeout = timeout;
       }
+
+      xhr.open(request.method, request.url, true);
 
       if (request.credentials === 'include') {
         xhr.withCredentials = true;
