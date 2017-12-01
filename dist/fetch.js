@@ -679,6 +679,7 @@
     }
 
     this.method = normalizeMethod(options.method || this.method || 'GET');
+    // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Request/mode
     this.mode = options.mode || this.mode || (supportXDomainRequest ? 'no-cors' : 'cors');
     this.referrer = options.referrer || this.referrer || 'about:client';
 
@@ -710,6 +711,21 @@
   var redirectStatuses = [301, 302, 303, 307, 308];
 
   /**
+   * @function normalizeType
+   * @param {string} type
+   * @returns {string}
+   */
+  function normalizeType(type) {
+    if (!type) return 'default';
+
+    if (type === 'cors') {
+      return type;
+    }
+
+    return 'basic';
+  }
+
+  /**
    * @class Response
    * @constructor
    * @param {any} body
@@ -720,7 +736,8 @@
 
     options = options || {};
 
-    this.type = options.type || 'default';
+    // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Response/type
+    this.type = normalizeType(options.type);
     this.status = options.status === undefined ? 200 : options.status;
 
     // @see https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
