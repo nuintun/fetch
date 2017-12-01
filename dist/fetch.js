@@ -851,7 +851,7 @@
 
     if (xhr.getAllResponseHeaders) {
       // Replace instances of \r\n and \n followed by at least one space or horizontal tab with a space
-      // https://tools.ietf.org/html/rfc7230#section-3.2
+      // @see https://tools.ietf.org/html/rfc7230#section-3.2
       var rawHeaders = xhr.getAllResponseHeaders() || '';
       var preProcessedHeaders = rawHeaders.replace(/\r?\n[\t ]+/g, ' ');
 
@@ -887,15 +887,6 @@
    */
   function isUseXDomainRequest(request) {
     return supportXDomainRequest && (request.mode === 'cors' || request.credentials === 'include');
-  }
-
-  /**
-   * @function send
-   * @param {XMLHttpRequest|XDomainRequest} xhr
-   * @param {Request} request
-   */
-  function send(xhr, request) {
-    xhr.send(request.body === undefined ? null : request.body);
   }
 
   /**
@@ -941,13 +932,9 @@
         reject(new TypeError('Network request timeout'));
       });
 
-      var timeout = request.timeout;
-
-      if (typeOf(timeout) === 'number' && timeout > 0) {
-        xhr.timeout = timeout;
-      }
-
       xhr.open(request.method, request.url, true);
+
+      xhr.timeout = Math.max(request.timeout >> 0, 0);
 
       if (request.credentials === 'include') {
         xhr.withCredentials = true;
@@ -967,13 +954,7 @@
         }, headers);
       }
 
-      if (useXDomainRequest) {
-        setTimeout(function() {
-          send(xhr, request);
-        }, 0);
-      } else {
-        send(xhr, request);
-      }
+      xhr.send(request.body === undefined ? null : request.body);
     });
   }
 
