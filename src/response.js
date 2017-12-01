@@ -16,13 +16,14 @@ var redirectStatuses = [301, 302, 303, 307, 308];
  * @returns {string}
  */
 function normalizeType(type) {
-  if (!type) return 'default';
-
-  if (type === 'cors') {
-    return type;
+  switch (type) {
+    case 'cors':
+    case 'basic':
+    case 'opaque':
+      return type;
+    default:
+      return 'default';
   }
-
-  return 'basic';
 }
 
 /**
@@ -49,7 +50,7 @@ export default function Response(body, options) {
   this.ok = this.status >= 200 && this.status < 300;
   this.statusText = options.statusText || (this.status === 200 ? 'OK' : '');
   this.headers = new Headers(options.headers);
-  this.url = normalizeURL(options.url || '');
+  this.url = options.url ? normalizeURL(options.url) : '';
 
   this._initBody(body);
 }

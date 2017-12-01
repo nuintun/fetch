@@ -7,6 +7,7 @@
 import Request from './request';
 import Response from './response';
 import Headers from './headers';
+import { isCORS } from './utils';
 import { supportBlob, supportXDomainRequest } from './support';
 
 /**
@@ -92,7 +93,7 @@ function responseURL(xhr, headers, url) {
  * @returns {boolean}
  */
 function isUseXDomainRequest(request) {
-  return supportXDomainRequest && (request.mode === 'cors' || request.credentials === 'include');
+  return supportXDomainRequest && isCORS(request.url);
 }
 
 /**
@@ -111,8 +112,20 @@ function fetch(input, init) {
       request = new Request(input, init);
     }
 
-    var useXDomainRequest = isUseXDomainRequest(request);
-    var xhr = useXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
+    var cors = isCORS(request.url);
+
+    if (cors) {
+      switch (request.mode) {
+        case 'same-origin':
+          return reject(
+            new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
+          );
+        case 'no-cors':
+          return resolve(new Response(null, { status: 0, type: 'opaque' }));
+      }
+    }
+
+    var xhr = cors && supportXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
 
     normalizeEvents(xhr);
 
@@ -123,7 +136,7 @@ function fetch(input, init) {
         headers: headers,
         status: xhr.status,
         statusText: xhr.statusText,
-        type: request.mode || 'basic',
+        type: cors ? 'cors' : 'basic',
         url: responseURL(xhr, headers) || request.url
       };
 

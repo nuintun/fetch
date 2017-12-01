@@ -54,22 +54,22 @@ var AUTH_RE = /^([a-z0-9.+-]+:)?(\/\/)(?:([^@/:]*)(?::([^@/]*))?@)?/i;
 /**
  * @function normalizeURL
  * @description Get full url
- * @param {string} href
+ * @param {string} url
  * @param {boolean} hash
  * @returns {string}
  */
-export function normalizeURL(href, hash) {
+export function normalizeURL(url, hash) {
   var username;
   var password;
 
-  href = href.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
+  url = url.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
     username = user;
     password = pass;
 
     return protocol + slash;
   });
 
-  A.href = href;
+  A.href = url;
 
   if (!A.protocol) {
     A.protocol = location.protocol;
@@ -81,37 +81,78 @@ export function normalizeURL(href, hash) {
 
   var protocol = A.protocol;
 
-  href = protocol + '//';
+  url = protocol + '//';
 
   if (username) {
-    href += username;
+    url += username;
   }
 
   if (password) {
-    href += ':' + password;
+    url += ':' + password;
   }
 
   if (username || password) {
-    href += '@';
+    url += '@';
   }
 
-  href += A.hostname;
+  url += A.hostname;
 
   var port = A.port;
 
-  if (port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
-    href += ':' + port;
+  if (port && ((protocol === 'http:' && port !== '80') || (protocol === 'https:' && port !== '443'))) {
+    url += ':' + port;
   }
 
   if (A.pathname) {
-    href += '/' + A.pathname;
+    url += '/' + A.pathname;
   }
 
-  href += A.search;
+  url += A.search;
 
   if (hash) {
-    href += A.hash;
+    url += A.hash;
   }
 
-  return href;
+  return url;
+}
+
+var DOMAIN = document.domain;
+var PORTS = { 'http:': '80', 'https:': '443' };
+var PORT = location.port || PORTS[location.protocol];
+
+/**
+ * @function isCORS
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function isCORS(url) {
+  url = url.replace(AUTH_RE, '$1$2');
+
+  A.href = url;
+
+  if (!A.host) {
+    return false;
+  }
+
+  var protocol = A.protocol;
+
+  if (protocol && protocol !== location.protocol) {
+    return true;
+  }
+
+  var port = A.port;
+
+  if (port && port !== PORT) {
+    return true;
+  }
+
+  try {
+    document.domain = A.hostname;
+  } catch (error) {
+    return true;
+  }
+
+  document.domain = DOMAIN;
+
+  return false;
 }

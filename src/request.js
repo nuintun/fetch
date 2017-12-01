@@ -4,7 +4,6 @@
  * @version 2017/11/28
  */
 
-import { supportXDomainRequest } from './support';
 import { normalizeURL, extend } from './utils';
 import Headers from './headers';
 import Body from './body';
@@ -69,7 +68,7 @@ export default function Request(input, options) {
 
   this.method = normalizeMethod(options.method || this.method || 'GET');
   // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Request/mode
-  this.mode = options.mode || this.mode || (supportXDomainRequest ? 'no-cors' : 'cors');
+  this.mode = options.mode || this.mode || 'cors';
   this.referrer = options.referrer || this.referrer || 'about:client';
 
   if ((this.method === 'GET' || this.method === 'HEAD') && body) {

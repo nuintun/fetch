@@ -4,20 +4,6 @@
   if (window.fetch) return;
 
   /**
-   * @module support
-   * @license MIT
-   * @version 2017/11/29
-   */
-
-  var supportFormData = 'FormData' in window;
-  var supportArrayBuffer = 'ArrayBuffer' in window;
-  var supportSearchParams = 'URLSearchParams' in window;
-  var supportBlob = 'FileReader' in window && 'Blob' in window;
-  var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
-  // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
-  var supportXDomainRequest = 'VBArray' in window && document.documentMode < 10;
-
-  /**
    * @module utils
    * @license MIT
    * @version 2017/11/28
@@ -73,22 +59,22 @@
   /**
    * @function normalizeURL
    * @description Get full url
-   * @param {string} href
+   * @param {string} url
    * @param {boolean} hash
    * @returns {string}
    */
-  function normalizeURL(href, hash) {
+  function normalizeURL(url, hash) {
     var username;
     var password;
 
-    href = href.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
+    url = url.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
       username = user;
       password = pass;
 
       return protocol + slash;
     });
 
-    A.href = href;
+    A.href = url;
 
     if (!A.protocol) {
       A.protocol = location.protocol;
@@ -100,40 +86,95 @@
 
     var protocol = A.protocol;
 
-    href = protocol + '//';
+    url = protocol + '//';
 
     if (username) {
-      href += username;
+      url += username;
     }
 
     if (password) {
-      href += ':' + password;
+      url += ':' + password;
     }
 
     if (username || password) {
-      href += '@';
+      url += '@';
     }
 
-    href += A.hostname;
+    url += A.hostname;
 
     var port = A.port;
 
-    if (port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
-      href += ':' + port;
+    if (port && ((protocol === 'http:' && port !== '80') || (protocol === 'https:' && port !== '443'))) {
+      url += ':' + port;
     }
 
     if (A.pathname) {
-      href += '/' + A.pathname;
+      url += '/' + A.pathname;
     }
 
-    href += A.search;
+    url += A.search;
 
     if (hash) {
-      href += A.hash;
+      url += A.hash;
     }
 
-    return href;
+    return url;
   }
+
+  var DOMAIN = document.domain;
+  var PORTS = { 'http:': '80', 'https:': '443' };
+  var PORT = location.port || PORTS[location.protocol];
+
+  /**
+   * @function isCORS
+   * @param {string} url
+   * @returns {boolean}
+   */
+  function isCORS(url) {
+    url = url.replace(AUTH_RE, '$1$2');
+
+    A.href = url;
+
+    if (!A.host) {
+      return false;
+    }
+
+    var protocol = A.protocol;
+
+    if (protocol && protocol !== location.protocol) {
+      return true;
+    }
+
+    var port = A.port;
+
+    if (port && port !== PORT) {
+      return true;
+    }
+
+    try {
+      document.domain = A.hostname;
+    } catch (error) {
+      return true;
+    }
+
+    document.domain = DOMAIN;
+
+    return false;
+  }
+
+  /**
+   * @module support
+   * @license MIT
+   * @version 2017/11/29
+   */
+
+  var supportFormData = 'FormData' in window;
+  var supportArrayBuffer = 'ArrayBuffer' in window;
+  var supportSearchParams = 'URLSearchParams' in window;
+  var supportBlob = 'FileReader' in window && 'Blob' in window;
+  var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
+  // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
+  var supportXDomainRequest = 'VBArray' in window && document.documentMode < 10;
 
   /**
    * @module headers
@@ -541,6 +582,7 @@
       this._bodyArrayBuffer = bufferClone(body);
     } else {
       this.body = null;
+      this._bodyText = '';
     }
   };
 
@@ -680,7 +722,7 @@
 
     this.method = normalizeMethod(options.method || this.method || 'GET');
     // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Request/mode
-    this.mode = options.mode || this.mode || (supportXDomainRequest ? 'no-cors' : 'cors');
+    this.mode = options.mode || this.mode || 'cors';
     this.referrer = options.referrer || this.referrer || 'about:client';
 
     if ((this.method === 'GET' || this.method === 'HEAD') && body) {
@@ -716,13 +758,14 @@
    * @returns {string}
    */
   function normalizeType(type) {
-    if (!type) return 'default';
-
-    if (type === 'cors') {
-      return type;
+    switch (type) {
+      case 'cors':
+      case 'basic':
+      case 'opaque':
+        return type;
+      default:
+        return 'default';
     }
-
-    return 'basic';
   }
 
   /**
@@ -749,7 +792,7 @@
     this.ok = this.status >= 200 && this.status < 300;
     this.statusText = options.statusText || (this.status === 200 ? 'OK' : '');
     this.headers = new Headers(options.headers);
-    this.url = normalizeURL(options.url || '');
+    this.url = options.url ? normalizeURL(options.url) : '';
 
     this._initBody(body);
   }
@@ -881,15 +924,6 @@
   }
 
   /**
-   * @function isUseXDomainRequest
-   * @param {Request} request
-   * @returns {boolean}
-   */
-  function isUseXDomainRequest(request) {
-    return supportXDomainRequest && (request.mode === 'cors' || request.credentials === 'include');
-  }
-
-  /**
    * @function fetch
    * @param {Request|string} input
    * @param {Object|Request} init
@@ -905,8 +939,20 @@
         request = new Request(input, init);
       }
 
-      var useXDomainRequest = isUseXDomainRequest(request);
-      var xhr = useXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
+      var cors = isCORS(request.url);
+
+      if (cors) {
+        switch (request.mode) {
+          case 'same-origin':
+            return reject(
+              new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
+            );
+          case 'no-cors':
+            return resolve(new Response(null, { status: 0, type: 'opaque' }));
+        }
+      }
+
+      var xhr = cors && supportXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
 
       normalizeEvents(xhr);
 
@@ -917,7 +963,7 @@
           headers: headers,
           status: xhr.status,
           statusText: xhr.statusText,
-          type: request.mode || 'basic',
+          type: cors ? 'cors' : 'basic',
           url: responseURL(xhr, headers) || request.url
         };
 

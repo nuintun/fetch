@@ -201,6 +201,7 @@ Body.prototype._initBody = function(body) {
     this._bodyArrayBuffer = bufferClone(body);
   } else {
     this.body = null;
+    this._bodyText = '';
   }
 };
 
