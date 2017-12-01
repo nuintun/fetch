@@ -133,6 +133,7 @@ function fetch(input, init) {
         headers: headers,
         status: xhr.status,
         statusText: xhr.statusText,
+        type: request.mode || 'basic',
         url: responseURL(xhr, headers) || request.url
       };
 

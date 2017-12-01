@@ -60,7 +60,7 @@ export default function Request(input, options) {
     this.url = String(input);
   }
 
-  this.url = normalizeURL(this.url);
+  this.url = normalizeURL(this.url, true);
   this.credentials = options.credentials || this.credentials || 'omit';
 
   if (options.headers || !this.headers) {

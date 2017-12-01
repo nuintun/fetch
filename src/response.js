@@ -21,7 +21,7 @@ export default function Response(body, options) {
 
   options = options || {};
 
-  this.type = 'basic';
+  this.type = options.type || 'default';
   this.status = options.status === undefined ? 200 : options.status;
 
   // @see https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
@@ -31,7 +31,7 @@ export default function Response(body, options) {
 
   this.redirected = redirectStatuses.indexOf(this.status) >= 0;
   this.ok = this.status >= 200 && this.status < 300;
-  this.statusText = options.statusText || 'OK';
+  this.statusText = options.statusText || (this.status === 200 ? 'OK' : '');
   this.headers = new Headers(options.headers);
   this.url = normalizeURL(options.url || '');
 

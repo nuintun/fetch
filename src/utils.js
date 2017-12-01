@@ -48,20 +48,70 @@ export function extend(superclass, subclass) {
   subclass.prototype.constructor = subclass;
 }
 
-var host = location.host;
 var A = document.createElement('a');
+var AUTH_RE = /^([a-z0-9.+-]+:)?(\/\/)(?:([^@/:]*)(?::([^@/]*))?@)?/i;
 
 /**
  * @function normalizeURL
  * @description Get full url
  * @param {string} href
+ * @param {boolean} hash
+ * @returns {string}
  */
-export function normalizeURL(href) {
+export function normalizeURL(href, hash) {
+  var username;
+  var password;
+
+  href = href.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
+    username = user;
+    password = pass;
+
+    return protocol + slash;
+  });
+
   A.href = href;
 
-  if (!A.host) {
-    A.host = host;
+  if (!A.protocol) {
+    A.protocol = location.protocol;
   }
 
-  return A.href;
+  if (!A.host) {
+    A.host = location.host;
+  }
+
+  var protocol = A.protocol;
+
+  href = protocol + '//';
+
+  if (username) {
+    href += username;
+  }
+
+  if (password) {
+    href += ':' + password;
+  }
+
+  if (username || password) {
+    href += '@';
+  }
+
+  href += A.hostname;
+
+  var port = A.port;
+
+  if (port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
+    href += ':' + port;
+  }
+
+  if (A.pathname) {
+    href += '/' + A.pathname;
+  }
+
+  href += A.search;
+
+  if (hash) {
+    href += A.hash;
+  }
+
+  return href;
 }

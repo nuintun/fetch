@@ -67,22 +67,72 @@
     subclass.prototype.constructor = subclass;
   }
 
-  var host = location.host;
   var A = document.createElement('a');
+  var AUTH_RE = /^([a-z0-9.+-]+:)?(\/\/)(?:([^@/:]*)(?::([^@/]*))?@)?/i;
 
   /**
    * @function normalizeURL
    * @description Get full url
    * @param {string} href
+   * @param {boolean} hash
+   * @returns {string}
    */
-  function normalizeURL(href) {
+  function normalizeURL(href, hash) {
+    var username;
+    var password;
+
+    href = href.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
+      username = user;
+      password = pass;
+
+      return protocol + slash;
+    });
+
     A.href = href;
 
-    if (!A.host) {
-      A.host = host;
+    if (!A.protocol) {
+      A.protocol = location.protocol;
     }
 
-    return A.href;
+    if (!A.host) {
+      A.host = location.host;
+    }
+
+    var protocol = A.protocol;
+
+    href = protocol + '//';
+
+    if (username) {
+      href += username;
+    }
+
+    if (password) {
+      href += ':' + password;
+    }
+
+    if (username || password) {
+      href += '@';
+    }
+
+    href += A.hostname;
+
+    var port = A.port;
+
+    if (port && ((protocol === 'http' && port !== '80') || (protocol === 'https' && port !== '443'))) {
+      href += ':' + port;
+    }
+
+    if (A.pathname) {
+      href += '/' + A.pathname;
+    }
+
+    href += A.search;
+
+    if (hash) {
+      href += A.hash;
+    }
+
+    return href;
   }
 
   /**
@@ -621,7 +671,7 @@
       this.url = String(input);
     }
 
-    this.url = normalizeURL(this.url);
+    this.url = normalizeURL(this.url, true);
     this.credentials = options.credentials || this.credentials || 'omit';
 
     if (options.headers || !this.headers) {
@@ -670,7 +720,7 @@
 
     options = options || {};
 
-    this.type = 'basic';
+    this.type = options.type || 'default';
     this.status = options.status === undefined ? 200 : options.status;
 
     // @see https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
@@ -680,7 +730,7 @@
 
     this.redirected = redirectStatuses.indexOf(this.status) >= 0;
     this.ok = this.status >= 200 && this.status < 300;
-    this.statusText = options.statusText || 'OK';
+    this.statusText = options.statusText || (this.status === 200 ? 'OK' : '');
     this.headers = new Headers(options.headers);
     this.url = normalizeURL(options.url || '');
 
@@ -859,6 +909,7 @@
           headers: headers,
           status: xhr.status,
           statusText: xhr.statusText,
+          type: request.mode || 'basic',
           url: responseURL(xhr, headers) || request.url
         };
 
