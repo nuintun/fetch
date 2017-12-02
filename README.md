@@ -5,7 +5,7 @@
 >[![Dependencies][david-image]][david-url]
 
 ### Supports all mainstream browsers
->If not ```CORS``` support ```IE >=7``` else support ```IE >= 8```
+>If not ```CORS``` support ```IE >= 7``` else support ```IE >= 8```
 >
 >Notice: IE8-9 use ```XDomainRequest```
 
