@@ -173,6 +173,7 @@
    * @function normalizeName
    * @param {string} name
    * @returns {string}
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Headers
    */
   function normalizeName(name) {
     if (typeOf(name) !== 'string') {
@@ -668,6 +669,7 @@
    * @constructor
    * @param {Request|string} input
    * @param {Object} options
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Request
    */
   function Request(input, options) {
     Body.call(this);
@@ -690,7 +692,9 @@
 
       this.method = input.method;
       this.mode = input.mode;
+      this.redirect = input.redirect;
       this.referrer = input.referrer;
+      this.referrerPolicy = input.referrerPolicy;
 
       if (!body && input.body !== null) {
         body = input.body;
@@ -708,13 +712,15 @@
     }
 
     this.method = normalizeMethod(options.method || this.method || 'GET');
-    // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Request/mode
-    this.mode = options.mode || this.mode || 'cors';
-    this.referrer = options.referrer || this.referrer || 'about:client';
 
     if ((this.method === 'GET' || this.method === 'HEAD') && body) {
       throw new TypeError('Request with GET/HEAD method cannot have body');
     }
+
+    this.mode = options.mode || this.mode || 'cors';
+    this.redirect = options.redirect || this.redirect || 'follow';
+    this.referrer = options.referrer || this.referrer || 'about:client';
+    this.referrerPolicy = options.referrerPolicy || this.referrerPolicy || '';
 
     this._initBody(body);
   }
@@ -760,17 +766,17 @@
    * @constructor
    * @param {any} body
    * @param {Object} options
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Response
    */
   function Response(body, options) {
     Body.call(this);
 
     options = options || {};
 
-    // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Response/type
     this.type = normalizeType(options.type);
     this.status = options.status === undefined ? 200 : options.status;
 
-    // @see https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+    // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
     if (this.status === 1223) {
       this.status = 204;
     }
@@ -890,6 +896,7 @@
    * @param {Request|string} input
    * @param {Object|Request} init
    * @returns {Promise}
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
    */
   function fetch(input, init) {
     return new Promise(function(resolve, reject) {

@@ -11,6 +11,7 @@ import { supportIterable } from './support';
  * @function normalizeName
  * @param {string} name
  * @returns {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Headers
  */
 function normalizeName(name) {
   if (typeOf(name) !== 'string') {

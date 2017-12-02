@@ -31,17 +31,17 @@ function normalizeType(type) {
  * @constructor
  * @param {any} body
  * @param {Object} options
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Response
  */
 export default function Response(body, options) {
   Body.call(this);
 
   options = options || {};
 
-  // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Response/type
   this.type = normalizeType(options.type);
   this.status = options.status === undefined ? 200 : options.status;
 
-  // @see https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
+  // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
   if (this.status === 1223) {
     this.status = 204;
   }

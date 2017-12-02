@@ -27,6 +27,7 @@ function normalizeMethod(method) {
  * @constructor
  * @param {Request|string} input
  * @param {Object} options
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Request
  */
 export default function Request(input, options) {
   Body.call(this);
@@ -49,7 +50,9 @@ export default function Request(input, options) {
 
     this.method = input.method;
     this.mode = input.mode;
+    this.redirect = input.redirect;
     this.referrer = input.referrer;
+    this.referrerPolicy = input.referrerPolicy;
 
     if (!body && input.body !== null) {
       body = input.body;
@@ -67,13 +70,15 @@ export default function Request(input, options) {
   }
 
   this.method = normalizeMethod(options.method || this.method || 'GET');
-  // @see https://developer.mozilla.org/zh-CN/docs/Web/API/Request/mode
-  this.mode = options.mode || this.mode || 'cors';
-  this.referrer = options.referrer || this.referrer || 'about:client';
 
   if ((this.method === 'GET' || this.method === 'HEAD') && body) {
     throw new TypeError('Request with GET/HEAD method cannot have body');
   }
+
+  this.mode = options.mode || this.mode || 'cors';
+  this.redirect = options.redirect || this.redirect || 'follow';
+  this.referrer = options.referrer || this.referrer || 'about:client';
+  this.referrerPolicy = options.referrerPolicy || this.referrerPolicy || '';
 
   this._initBody(body);
 }

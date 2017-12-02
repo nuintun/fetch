@@ -67,6 +67,7 @@ function createXHR(cors) {
  * @param {Request|string} input
  * @param {Object|Request} init
  * @returns {Promise}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
  */
 function fetch(input, init) {
   return new Promise(function(resolve, reject) {
