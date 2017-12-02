@@ -106,3 +106,25 @@ export function isCORS(url) {
 
   return false;
 }
+
+/**
+ * @function assertArguments
+ * @param {string} method
+ * @param {number} expect
+ * @param {number} actual
+ */
+export function assertArguments(master, method, expect, actual) {
+  if (actual < expect) {
+    throw new TypeError(
+      "Failed to execute '" +
+        method +
+        "' on '" +
+        master +
+        "': " +
+        expect +
+        ' arguments required, but only ' +
+        actual +
+        ' present'
+    );
+  }
+}

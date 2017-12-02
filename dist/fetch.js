@@ -4,6 +4,20 @@
   if (window.fetch) return;
 
   /**
+   * @module support
+   * @license MIT
+   * @version 2017/11/29
+   */
+
+  var supportFormData = 'FormData' in window;
+  var supportArrayBuffer = 'ArrayBuffer' in window;
+  var supportSearchParams = 'URLSearchParams' in window;
+  var supportBlob = 'FileReader' in window && 'Blob' in window;
+  var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
+  // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
+  var supportXDomainRequest = 'XDomainRequest' in window && document.documentMode >> 0 < 10;
+
+  /**
    * @module utils
    * @license MIT
    * @version 2017/11/28
@@ -113,18 +127,26 @@
   }
 
   /**
-   * @module support
-   * @license MIT
-   * @version 2017/11/29
+   * @function assertArguments
+   * @param {string} method
+   * @param {number} expect
+   * @param {number} actual
    */
-
-  var supportFormData = 'FormData' in window;
-  var supportArrayBuffer = 'ArrayBuffer' in window;
-  var supportSearchParams = 'URLSearchParams' in window;
-  var supportBlob = 'FileReader' in window && 'Blob' in window;
-  var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
-  // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
-  var supportXDomainRequest = 'XDomainRequest' in window && document.documentMode >> 0 < 10;
+  function assertArguments(master, method, expect, actual) {
+    if (actual < expect) {
+      throw new TypeError(
+        "Failed to execute '" +
+          method +
+          "' on '" +
+          master +
+          "': " +
+          expect +
+          ' arguments required, but only ' +
+          actual +
+          ' present'
+      );
+    }
+  }
 
   /**
    * @module headers
@@ -139,12 +161,10 @@
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Headers
    */
   function normalizeName(name) {
-    if (typeOf(name) !== 'string') {
-      name = String(name);
-    }
+    name = String(name);
 
-    if (/[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
-      throw new TypeError('Invalid character in header field name');
+    if (!name || /[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
+      throw new TypeError('Headers API: Invalid header name');
     }
 
     return name.toLowerCase();
@@ -156,9 +176,7 @@
    * @returns {string}
    */
   function normalizeValue(value) {
-    if (typeOf(value) !== 'string') {
-      value = String(value);
-    }
+    value = String(value);
 
     return value;
   }
@@ -199,16 +217,33 @@
     this.map = {};
     this._headerNames = {};
 
+    if (headers === undefined) return this;
+
     if (headers instanceof Headers) {
       headers.forEach(function(value, name) {
         this.append(name, value);
       }, this);
-    } else if (headers) {
+    } else if (Array.isArray(headers)) {
+      headers.forEach(function(sequence) {
+        if (sequence.length < 2) {
+          throw new TypeError('Headers API: Invalid header value');
+        }
+
+        var name = sequence[0];
+        var value = sequence[1];
+
+        this.append(name, value);
+      }, this);
+    } else if (typeOf(headers) === 'object') {
       for (var name in headers) {
         if (headers.hasOwnProperty(name)) {
           this.append(name, headers[name]);
         }
       }
+    } else {
+      throw new TypeError(
+        "Headers API: The provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)"
+      );
     }
   }
 
@@ -218,6 +253,8 @@
    * @param {string} value
    */
   Headers.prototype.append = function(name, value) {
+    assertArguments('Headers', 'append', 2, arguments.length);
+
     var key = normalizeName(name);
 
     this._headerNames[key] = name;
@@ -234,6 +271,8 @@
    * @param {string} name
    */
   Headers.prototype['delete'] = function(name) {
+    assertArguments('Headers', 'delete', 1, arguments.length);
+
     name = normalizeName(name);
 
     delete this.map[name];
@@ -246,6 +285,8 @@
    * @returns {string}
    */
   Headers.prototype.get = function(name) {
+    assertArguments('Headers', 'get', 1, arguments.length);
+
     name = normalizeName(name);
 
     return this.has(name) ? this.map[name] : null;
@@ -257,6 +298,8 @@
    * @returns {boolean}
    */
   Headers.prototype.has = function(name) {
+    assertArguments('Headers', 'has', 1, arguments.length);
+
     return this.map.hasOwnProperty(normalizeName(name));
   };
 
@@ -266,6 +309,8 @@
    * @param {string} value
    */
   Headers.prototype.set = function(name, value) {
+    assertArguments('Headers', 'set', 2, arguments.length);
+
     var key = normalizeName(name);
 
     this._headerNames[key] = name;
@@ -278,6 +323,8 @@
    * @param {any} context
    */
   Headers.prototype.forEach = function(callback, context) {
+    assertArguments('Headers', 'forEach', 1, arguments.length);
+
     for (var name in this.map) {
       if (this.map.hasOwnProperty(name)) {
         callback.call(context, this.map[name], name, this);
@@ -635,6 +682,12 @@
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Request
    */
   function Request(input, options) {
+    var length = arguments.length;
+
+    if (length < 1) {
+      throw new TypeError('Request API: 1 argument required, but only ' + length + ' present');
+    }
+
     Body.call(this);
 
     options = options || {};
@@ -666,7 +719,7 @@
       var url = String(input);
 
       if (hasAuth(url)) {
-        throw new TypeError('Request cannot be constructed from a URL that includes credentials: ' + url);
+        throw new TypeError('Request API: Request cannot be constructed from a URL that includes credentials: ' + url);
       }
 
       this.url = normalizeURL(url);
@@ -674,7 +727,7 @@
       this.method = normalizeMethod(options.method || 'GET');
 
       if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-        throw new TypeError('Request with GET/HEAD method cannot have body');
+        throw new TypeError('Request API: Request with GET/HEAD method cannot have body');
       }
 
       this.credentials = options.credentials || 'omit';
@@ -788,8 +841,10 @@
    * @returns {Response}
    */
   Response.redirect = function(url, status) {
+    assertArguments('Response', 'redirect', 1, arguments);
+
     if (redirectStatuses.indexOf(status) === -1) {
-      throw new RangeError('Invalid status code');
+      throw new RangeError('Response API: Invalid status code');
     }
 
     return new Response(null, { status: status, headers: { location: url } });
@@ -863,6 +918,8 @@
    * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
    */
   function fetch(input, init) {
+    assertArguments('Window', 'fetch', 1, arguments.length);
+
     return new Promise(function(resolve, reject) {
       var request;
 
@@ -878,7 +935,9 @@
         switch (request.mode) {
           case 'same-origin':
             return reject(
-              new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
+              new TypeError(
+                'Fetch API: Request mode is "same-origin" but the URL\'s origin is not same as the request origin'
+              )
             );
           case 'no-cors':
             return resolve(new Response(null, { status: 0, type: 'opaque' }));
@@ -927,7 +986,7 @@
       }
 
       function rejectError(message) {
-        reject(new TypeError('Request ' + request.url + ' ' + message));
+        reject(new TypeError('Fetch API: Request ' + request.url + ' ' + message));
       }
 
       xhr.onerror = function() {

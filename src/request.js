@@ -30,6 +30,12 @@ function normalizeMethod(method) {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Request
  */
 export default function Request(input, options) {
+  var length = arguments.length;
+
+  if (length < 1) {
+    throw new TypeError('Request API: 1 argument required, but only ' + length + ' present');
+  }
+
   Body.call(this);
 
   options = options || {};
@@ -61,7 +67,7 @@ export default function Request(input, options) {
     var url = String(input);
 
     if (hasAuth(url)) {
-      throw new TypeError('Request cannot be constructed from a URL that includes credentials: ' + url);
+      throw new TypeError('Request API: Request cannot be constructed from a URL that includes credentials: ' + url);
     }
 
     this.url = normalizeURL(url);
@@ -69,7 +75,7 @@ export default function Request(input, options) {
     this.method = normalizeMethod(options.method || 'GET');
 
     if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-      throw new TypeError('Request with GET/HEAD method cannot have body');
+      throw new TypeError('Request API: Request with GET/HEAD method cannot have body');
     }
 
     this.credentials = options.credentials || 'omit';

@@ -4,8 +4,8 @@
  * @version 2017/11/28
  */
 
-import { typeOf } from './utils';
 import { supportIterable } from './support';
+import { typeOf, assertArguments } from './utils';
 
 /**
  * @function normalizeName
@@ -14,12 +14,10 @@ import { supportIterable } from './support';
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Headers
  */
 function normalizeName(name) {
-  if (typeOf(name) !== 'string') {
-    name = String(name);
-  }
+  name = String(name);
 
-  if (/[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
-    throw new TypeError('Invalid character in header field name');
+  if (!name || /[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
+    throw new TypeError('Headers API: Invalid header name');
   }
 
   return name.toLowerCase();
@@ -31,9 +29,7 @@ function normalizeName(name) {
  * @returns {string}
  */
 function normalizeValue(value) {
-  if (typeOf(value) !== 'string') {
-    value = String(value);
-  }
+  value = String(value);
 
   return value;
 }
@@ -74,16 +70,33 @@ export default function Headers(headers) {
   this.map = {};
   this._headerNames = {};
 
+  if (headers === undefined) return this;
+
   if (headers instanceof Headers) {
     headers.forEach(function(value, name) {
       this.append(name, value);
     }, this);
-  } else if (headers) {
+  } else if (Array.isArray(headers)) {
+    headers.forEach(function(sequence) {
+      if (sequence.length < 2) {
+        throw new TypeError('Headers API: Invalid header value');
+      }
+
+      var name = sequence[0];
+      var value = sequence[1];
+
+      this.append(name, value);
+    }, this);
+  } else if (typeOf(headers) === 'object') {
     for (var name in headers) {
       if (headers.hasOwnProperty(name)) {
         this.append(name, headers[name]);
       }
     }
+  } else {
+    throw new TypeError(
+      "Headers API: The provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)"
+    );
   }
 }
 
@@ -93,6 +106,8 @@ export default function Headers(headers) {
  * @param {string} value
  */
 Headers.prototype.append = function(name, value) {
+  assertArguments('Headers', 'append', 2, arguments.length);
+
   var key = normalizeName(name);
 
   this._headerNames[key] = name;
@@ -109,6 +124,8 @@ Headers.prototype.append = function(name, value) {
  * @param {string} name
  */
 Headers.prototype['delete'] = function(name) {
+  assertArguments('Headers', 'delete', 1, arguments.length);
+
   name = normalizeName(name);
 
   delete this.map[name];
@@ -121,6 +138,8 @@ Headers.prototype['delete'] = function(name) {
  * @returns {string}
  */
 Headers.prototype.get = function(name) {
+  assertArguments('Headers', 'get', 1, arguments.length);
+
   name = normalizeName(name);
 
   return this.has(name) ? this.map[name] : null;
@@ -132,6 +151,8 @@ Headers.prototype.get = function(name) {
  * @returns {boolean}
  */
 Headers.prototype.has = function(name) {
+  assertArguments('Headers', 'has', 1, arguments.length);
+
   return this.map.hasOwnProperty(normalizeName(name));
 };
 
@@ -141,6 +162,8 @@ Headers.prototype.has = function(name) {
  * @param {string} value
  */
 Headers.prototype.set = function(name, value) {
+  assertArguments('Headers', 'set', 2, arguments.length);
+
   var key = normalizeName(name);
 
   this._headerNames[key] = name;
@@ -153,6 +176,8 @@ Headers.prototype.set = function(name, value) {
  * @param {any} context
  */
 Headers.prototype.forEach = function(callback, context) {
+  assertArguments('Headers', 'forEach', 1, arguments.length);
+
   for (var name in this.map) {
     if (this.map.hasOwnProperty(name)) {
       callback.call(context, this.map[name], name, this);

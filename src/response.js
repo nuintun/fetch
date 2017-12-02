@@ -4,7 +4,7 @@
  * @version 2017/11/28
  */
 
-import { normalizeURL, extend } from './utils';
+import { assertArguments, normalizeURL, extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
@@ -91,8 +91,10 @@ Response.error = function() {
  * @returns {Response}
  */
 Response.redirect = function(url, status) {
+  assertArguments('Response', 'redirect', 1, arguments);
+
   if (redirectStatuses.indexOf(status) === -1) {
-    throw new RangeError('Invalid status code');
+    throw new RangeError('Response API: Invalid status code');
   }
 
   return new Response(null, { status: status, headers: { location: url } });

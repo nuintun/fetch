@@ -4,11 +4,11 @@
  * @version 2017/11/28
  */
 
+import { supportBlob, supportXDomainRequest } from './support';
+import { isCORS, assertArguments } from './utils';
 import Request from './request';
 import Response from './response';
 import Headers from './headers';
-import { isCORS } from './utils';
-import { supportBlob, supportXDomainRequest } from './support';
 
 /**
  * @function parseHeaders
@@ -70,6 +70,8 @@ function createXHR(cors) {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
  */
 function fetch(input, init) {
+  assertArguments('Window', 'fetch', 1, arguments.length);
+
   return new Promise(function(resolve, reject) {
     var request;
 
@@ -85,7 +87,9 @@ function fetch(input, init) {
       switch (request.mode) {
         case 'same-origin':
           return reject(
-            new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
+            new TypeError(
+              'Fetch API: Request mode is "same-origin" but the URL\'s origin is not same as the request origin'
+            )
           );
         case 'no-cors':
           return resolve(new Response(null, { status: 0, type: 'opaque' }));
@@ -134,7 +138,7 @@ function fetch(input, init) {
     }
 
     function rejectError(message) {
-      reject(new TypeError('Request ' + request.url + ' ' + message));
+      reject(new TypeError('Fetch API: Request ' + request.url + ' ' + message));
     }
 
     xhr.onerror = function() {
