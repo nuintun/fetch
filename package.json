@@ -1,7 +1,7 @@
 {
   "name": "fetch",
   "version": "0.0.1",
-  "description": "fetch polyfill which supports all mainstream browsers.",
+  "description": "A pure JavaScript window.fetch polyfill.",
   "author": {
     "name": "nuintun",
     "email": "nuintun@qq.com"
