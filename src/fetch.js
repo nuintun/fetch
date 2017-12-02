@@ -132,19 +132,23 @@ function fetch(input, init) {
       };
     }
 
+    function rejectError(message) {
+      reject(new TypeError('Request ' + request.url + ' ' + message));
+    }
+
     xhr.onerror = function() {
       cleanXHR(xhr);
-      reject(new TypeError('Network request failed'));
+      rejectError('failed');
     };
 
     xhr.ontimeout = function() {
       cleanXHR(xhr);
-      reject(new TypeError('Network request timeout'));
+      rejectError('timeout');
     };
 
     xhr.onabort = function() {
       cleanXHR(xhr);
-      reject(new TypeError('Network request abort'));
+      rejectError('aborted');
     };
 
     try {
