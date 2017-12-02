@@ -60,7 +60,7 @@
 
           output.innerText = new Date().toISOString() + '\n\n' + JSON.stringify(json, null, 2);
         })['catch'](function (error) {
-          console.log('Failed: ', error);
+          console.error('Failed: ', error);
           console.timeEnd('Fetched');
         });
       }
