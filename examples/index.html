@@ -12,15 +12,35 @@
         margin: 0;
         padding: 0;
         text-align: center;
+        font: 13px/1.5 Consolas, "Lucida Console", monospace;
       }
 
       .ui-button {
         margin-top: 66px;
       }
+
+      pre {
+        margin: 20px 0;
+        text-align: left;
+        background: #000;
+        color: #fff;
+        padding: 10px;
+        display: inline-block;
+        *display: inline;
+        *zoom: 1;
+      }
     </style>
   </head>
   <body>
+    <div>
+      <input type="button" class="ui-button" onclick="send()" value="fetch" />
+    </div>
+    <div>
+      <pre id="output">Pleace click the fetch button!</pre>
+    </div>
     <script>
+      var output = document.getElementById('output');
+
       function send() {
         console.time('Fetched');
 
@@ -37,12 +57,13 @@
         }).then(function (json) {
           console.log('Got json: ', json);
           console.timeEnd('Fetched');
+
+          output.innerText = new Date().toISOString() + '\n\n' + JSON.stringify(json, null, 2);
         })['catch'](function (error) {
           console.log('Failed: ', error);
           console.timeEnd('Fetched');
         });
       }
     </script>
-    <input type="button" class="ui-button" onclick="send()" value="fetch" />
   </body>
 </html>
