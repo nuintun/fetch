@@ -22,6 +22,8 @@
   <body>
     <script>
       function send() {
+        console.time('Fetched');
+
         var result = fetch('/package.json?v=1.0.0#id=fetch', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
 
         result.then(function (response) {
@@ -34,8 +36,10 @@
           return json;
         }).then(function (json) {
           console.log('Got json: ', json);
+          console.timeEnd('Fetched');
         })['catch'](function (error) {
           console.log('Failed: ', error);
+          console.timeEnd('Fetched');
         });
       }
     </script>
