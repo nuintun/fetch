@@ -53,68 +53,36 @@
     subclass.prototype.constructor = subclass;
   }
 
+  // URL includes credentials
+  var AUTH_RE = /^([a-z0-9.+-]+:)?\/\/([^/:]*)(?::([^/]*))?@/i;
+
+  /**
+   * @function hasAuth
+   * @description Test url is include auth credentials
+   * @param {string} url
+   * @returns {boolean}
+   */
+  function hasAuth(url) {
+    return AUTH_RE.test(url);
+  }
+
   var A = document.createElement('a');
-  var AUTH_RE = /^([a-z0-9.+-]+:)?(\/\/)(?:([^/:]*)(?::([^/]*))?@)?/i;
 
   /**
    * @function normalizeURL
-   * @description Get full url
+   * @description Get full url. If URL includes credentials IE will can't read a.href
    * @param {string} url
    * @param {boolean} hash
    * @returns {string}
    */
   function normalizeURL(url, hash) {
-    var username;
-    var password;
-
-    url = url.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
-      username = user;
-      password = pass;
-
-      return (protocol || location.protocol) + slash;
-    });
-
     A.href = url;
 
     if (!A.host) {
       A.host = location.host;
     }
 
-    var protocol = A.protocol;
-
-    url = protocol + '//';
-
-    if (username) {
-      url += username;
-    }
-
-    if (password) {
-      url += ':' + password;
-    }
-
-    if (username || password) {
-      url += '@';
-    }
-
-    url += A.hostname;
-
-    var port = A.port;
-
-    if (port && ((protocol === 'http:' && port !== '80') || (protocol === 'https:' && port !== '443'))) {
-      url += ':' + port;
-    }
-
-    if (A.pathname) {
-      url += '/' + A.pathname;
-    }
-
-    url += A.search;
-
-    if (hash) {
-      url += A.hash;
-    }
-
-    return url;
+    return A.href;
   }
 
   var PORTS = { 'http:': '80', 'https:': '443' };
@@ -122,12 +90,11 @@
 
   /**
    * @function isCORS
+   * @description Test URL is CORS. If URL includes credentials IE will can't read a.href
    * @param {string} url
    * @returns {boolean}
    */
   function isCORS(url) {
-    url = url.replace(AUTH_RE, '$1$2');
-
     A.href = url;
 
     if (!A.host) return false;
@@ -680,43 +647,42 @@
       }
 
       this.url = input.url;
+      this.mode = input.mode;
+      this.method = input.method;
       this.credentials = input.credentials;
+      this.redirect = input.redirect;
+      this.referrer = input.referrer;
+      this.referrerPolicy = input.referrerPolicy;
 
       if (!options.headers) {
         this.headers = new Headers(input.headers);
       }
-
-      this.method = input.method;
-      this.mode = input.mode;
-      this.redirect = input.redirect;
-      this.referrer = input.referrer;
-      this.referrerPolicy = input.referrerPolicy;
 
       if (!body && input.body !== null) {
         body = input.body;
         input.bodyUsed = true;
       }
     } else {
-      this.url = String(input);
+      var url = String(input);
+
+      if (hasAuth(url)) {
+        throw new TypeError('Request cannot be constructed from a URL that includes credentials: ' + url);
+      }
+
+      this.url = normalizeURL(url);
+      this.mode = options.mode || 'cors';
+      this.method = normalizeMethod(options.method || 'GET');
+
+      if ((this.method === 'GET' || this.method === 'HEAD') && body) {
+        throw new TypeError('Request with GET/HEAD method cannot have body');
+      }
+
+      this.credentials = options.credentials || 'omit';
+      this.redirect = options.redirect || 'follow';
+      this.referrer = options.referrer || 'about:client';
+      this.referrerPolicy = options.referrerPolicy || '';
+      this.headers = new Headers(options.headers || {});
     }
-
-    this.url = normalizeURL(this.url, true);
-    this.credentials = options.credentials || this.credentials || 'omit';
-
-    if (options.headers || !this.headers) {
-      this.headers = new Headers(options.headers);
-    }
-
-    this.method = normalizeMethod(options.method || this.method || 'GET');
-
-    if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-      throw new TypeError('Request with GET/HEAD method cannot have body');
-    }
-
-    this.mode = options.mode || this.mode || 'cors';
-    this.redirect = options.redirect || this.redirect || 'follow';
-    this.referrer = options.referrer || this.referrer || 'about:client';
-    this.referrerPolicy = options.referrerPolicy || this.referrerPolicy || '';
 
     this._initBody(body);
   }
@@ -769,19 +735,21 @@
 
     options = options || {};
 
+    this.url = options.url || '';
     this.type = normalizeType(options.type);
-    this.status = options.status === undefined ? 200 : options.status;
+    this.headers = new Headers(options.headers);
+
+    var status = options.status === undefined ? 200 : options.status;
 
     // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
-    if (this.status === 1223) {
-      this.status = 204;
+    if (status === 1223) {
+      status = 204;
     }
 
-    this.redirected = redirectStatuses.indexOf(this.status) >= 0;
-    this.ok = this.status >= 200 && this.status < 300;
-    this.statusText = options.statusText || (this.status === 200 ? 'OK' : '');
-    this.headers = new Headers(options.headers);
-    this.url = options.url ? normalizeURL(options.url) : '';
+    this.status = status;
+    this.ok = status >= 200 && status < 300;
+    this.redirected = redirectStatuses.indexOf(status) >= 0;
+    this.statusText = options.statusText || (status === 200 ? 'OK' : '');
 
     this._initBody(body);
   }
@@ -942,7 +910,7 @@
           status: xhr.status,
           statusText: xhr.statusText,
           type: cors ? 'cors' : 'basic',
-          url: responseURL(xhr, headers) || request.url
+          url: responseURL(xhr, headers) || request.url.replace(/#.*/, '')
         };
 
         resolve(new Response(body, options));

@@ -117,7 +117,7 @@ function fetch(input, init) {
         status: xhr.status,
         statusText: xhr.statusText,
         type: cors ? 'cors' : 'basic',
-        url: responseURL(xhr, headers) || request.url
+        url: responseURL(xhr, headers) || request.url.replace(/#.*/, '')
       };
 
       resolve(new Response(body, options));

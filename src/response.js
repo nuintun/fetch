@@ -38,19 +38,21 @@ export default function Response(body, options) {
 
   options = options || {};
 
+  this.url = options.url || '';
   this.type = normalizeType(options.type);
-  this.status = options.status === undefined ? 200 : options.status;
+  this.headers = new Headers(options.headers);
+
+  var status = options.status === undefined ? 200 : options.status;
 
   // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
-  if (this.status === 1223) {
-    this.status = 204;
+  if (status === 1223) {
+    status = 204;
   }
 
-  this.redirected = redirectStatuses.indexOf(this.status) >= 0;
-  this.ok = this.status >= 200 && this.status < 300;
-  this.statusText = options.statusText || (this.status === 200 ? 'OK' : '');
-  this.headers = new Headers(options.headers);
-  this.url = options.url ? normalizeURL(options.url) : '';
+  this.status = status;
+  this.ok = status >= 200 && status < 300;
+  this.redirected = redirectStatuses.indexOf(status) >= 0;
+  this.statusText = options.statusText || (status === 200 ? 'OK' : '');
 
   this._initBody(body);
 }

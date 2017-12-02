@@ -48,68 +48,36 @@ export function extend(superclass, subclass) {
   subclass.prototype.constructor = subclass;
 }
 
+// URL includes credentials
+var AUTH_RE = /^([a-z0-9.+-]+:)?\/\/([^/:]*)(?::([^/]*))?@/i;
+
+/**
+ * @function hasAuth
+ * @description Test url is include auth credentials
+ * @param {string} url
+ * @returns {boolean}
+ */
+export function hasAuth(url) {
+  return AUTH_RE.test(url);
+}
+
 var A = document.createElement('a');
-var AUTH_RE = /^([a-z0-9.+-]+:)?(\/\/)(?:([^/:]*)(?::([^/]*))?@)?/i;
 
 /**
  * @function normalizeURL
- * @description Get full url
+ * @description Get full url. If URL includes credentials IE will can't read a.href
  * @param {string} url
  * @param {boolean} hash
  * @returns {string}
  */
 export function normalizeURL(url, hash) {
-  var username;
-  var password;
-
-  url = url.replace(AUTH_RE, function(match, protocol, slash, user, pass) {
-    username = user;
-    password = pass;
-
-    return (protocol || location.protocol) + slash;
-  });
-
   A.href = url;
 
   if (!A.host) {
     A.host = location.host;
   }
 
-  var protocol = A.protocol;
-
-  url = protocol + '//';
-
-  if (username) {
-    url += username;
-  }
-
-  if (password) {
-    url += ':' + password;
-  }
-
-  if (username || password) {
-    url += '@';
-  }
-
-  url += A.hostname;
-
-  var port = A.port;
-
-  if (port && ((protocol === 'http:' && port !== '80') || (protocol === 'https:' && port !== '443'))) {
-    url += ':' + port;
-  }
-
-  if (A.pathname) {
-    url += '/' + A.pathname;
-  }
-
-  url += A.search;
-
-  if (hash) {
-    url += A.hash;
-  }
-
-  return url;
+  return A.href;
 }
 
 var PORTS = { 'http:': '80', 'https:': '443' };
@@ -117,12 +85,11 @@ var PORT = location.port || PORTS[location.protocol];
 
 /**
  * @function isCORS
+ * @description Test URL is CORS. If URL includes credentials IE will can't read a.href
  * @param {string} url
  * @returns {boolean}
  */
 export function isCORS(url) {
-  url = url.replace(AUTH_RE, '$1$2');
-
   A.href = url;
 
   if (!A.host) return false;

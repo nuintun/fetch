@@ -4,7 +4,7 @@
  * @version 2017/11/28
  */
 
-import { normalizeURL, extend } from './utils';
+import { hasAuth, normalizeURL, extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
@@ -42,43 +42,42 @@ export default function Request(input, options) {
     }
 
     this.url = input.url;
+    this.mode = input.mode;
+    this.method = input.method;
     this.credentials = input.credentials;
+    this.redirect = input.redirect;
+    this.referrer = input.referrer;
+    this.referrerPolicy = input.referrerPolicy;
 
     if (!options.headers) {
       this.headers = new Headers(input.headers);
     }
-
-    this.method = input.method;
-    this.mode = input.mode;
-    this.redirect = input.redirect;
-    this.referrer = input.referrer;
-    this.referrerPolicy = input.referrerPolicy;
 
     if (!body && input.body !== null) {
       body = input.body;
       input.bodyUsed = true;
     }
   } else {
-    this.url = String(input);
+    var url = String(input);
+
+    if (hasAuth(url)) {
+      throw new TypeError('Request cannot be constructed from a URL that includes credentials: ' + url);
+    }
+
+    this.url = normalizeURL(url);
+    this.mode = options.mode || 'cors';
+    this.method = normalizeMethod(options.method || 'GET');
+
+    if ((this.method === 'GET' || this.method === 'HEAD') && body) {
+      throw new TypeError('Request with GET/HEAD method cannot have body');
+    }
+
+    this.credentials = options.credentials || 'omit';
+    this.redirect = options.redirect || 'follow';
+    this.referrer = options.referrer || 'about:client';
+    this.referrerPolicy = options.referrerPolicy || '';
+    this.headers = new Headers(options.headers || {});
   }
-
-  this.url = normalizeURL(this.url, true);
-  this.credentials = options.credentials || this.credentials || 'omit';
-
-  if (options.headers || !this.headers) {
-    this.headers = new Headers(options.headers);
-  }
-
-  this.method = normalizeMethod(options.method || this.method || 'GET');
-
-  if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-    throw new TypeError('Request with GET/HEAD method cannot have body');
-  }
-
-  this.mode = options.mode || this.mode || 'cors';
-  this.redirect = options.redirect || this.redirect || 'follow';
-  this.referrer = options.referrer || this.referrer || 'about:client';
-  this.referrerPolicy = options.referrerPolicy || this.referrerPolicy || '';
 
   this._initBody(body);
 }
