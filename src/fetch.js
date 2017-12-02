@@ -11,28 +11,30 @@ import { isCORS } from './utils';
 import { supportBlob, supportXDomainRequest } from './support';
 
 /**
- * @function normalizeEvents
+ * @function normalizeXHREvents
  * @param {XMLHttpRequest|XDomainRequest} xhr
  */
-function normalizeEvents(xhr) {
+function normalizeXHREvents(xhr) {
   var events = {};
 
+  function onload() {
+    if (events.load) {
+      events.load(xhr);
+    }
+  }
+
   if ('onload' in xhr) {
-    xhr.onload = function() {
-      if (events.load) {
-        events.load(xhr);
-      }
-    };
+    xhr.onload = onload;
   } else {
     xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4 && events.load) {
-        events.load(xhr);
+      if (xhr.readyState === 4) {
+        onload();
       }
     };
   }
 
   ['error', 'timeout'].forEach(function(method) {
-    xhr['on' + method] = function(e) {
+    xhr['on' + method] = function() {
       if (events[method]) {
         events[method](xhr);
       }
@@ -127,7 +129,7 @@ function fetch(input, init) {
 
     var xhr = cors && supportXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
 
-    normalizeEvents(xhr);
+    normalizeXHREvents(xhr);
 
     xhr.on('load', function(xhr) {
       var headers = parseHeaders(xhr);

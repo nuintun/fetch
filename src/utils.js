@@ -116,7 +116,6 @@ export function normalizeURL(url, hash) {
   return url;
 }
 
-var DOMAIN = document.domain;
 var PORTS = { 'http:': '80', 'https:': '443' };
 var PORT = location.port || PORTS[location.protocol];
 
@@ -130,29 +129,17 @@ export function isCORS(url) {
 
   A.href = url;
 
-  if (!A.host) {
-    return false;
-  }
+  if (!A.host) return false;
 
   var protocol = A.protocol;
 
-  if (protocol && protocol !== location.protocol) {
-    return true;
-  }
+  if (protocol && protocol !== location.protocol) return true;
 
   var port = A.port;
 
-  if (port && port !== PORT) {
-    return true;
-  }
+  if (port && port !== PORT) return true;
 
-  try {
-    document.domain = A.hostname;
-  } catch (error) {
-    return true;
-  }
-
-  document.domain = DOMAIN;
+  if (A.hostname !== location.hostname) return true;
 
   return false;
 }

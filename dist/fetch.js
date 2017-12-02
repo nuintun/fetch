@@ -121,7 +121,6 @@
     return url;
   }
 
-  var DOMAIN = document.domain;
   var PORTS = { 'http:': '80', 'https:': '443' };
   var PORT = location.port || PORTS[location.protocol];
 
@@ -135,29 +134,17 @@
 
     A.href = url;
 
-    if (!A.host) {
-      return false;
-    }
+    if (!A.host) return false;
 
     var protocol = A.protocol;
 
-    if (protocol && protocol !== location.protocol) {
-      return true;
-    }
+    if (protocol && protocol !== location.protocol) return true;
 
     var port = A.port;
 
-    if (port && port !== PORT) {
-      return true;
-    }
+    if (port && port !== PORT) return true;
 
-    try {
-      document.domain = A.hostname;
-    } catch (error) {
-      return true;
-    }
-
-    document.domain = DOMAIN;
+    if (A.hostname !== location.hostname) return true;
 
     return false;
   }
@@ -174,7 +161,7 @@
   var supportBlob = 'FileReader' in window && 'Blob' in window;
   var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
   // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
-  var supportXDomainRequest = 'VBArray' in window && document.documentMode < 10;
+  var supportXDomainRequest = 'XDomainRequest' in window && document.documentMode >> 0 < 10;
 
   /**
    * @module headers
@@ -847,28 +834,30 @@
    */
 
   /**
-   * @function normalizeEvents
+   * @function normalizeXHREvents
    * @param {XMLHttpRequest|XDomainRequest} xhr
    */
-  function normalizeEvents(xhr) {
+  function normalizeXHREvents(xhr) {
     var events = {};
 
+    function onload() {
+      if (events.load) {
+        events.load(xhr);
+      }
+    }
+
     if ('onload' in xhr) {
-      xhr.onload = function() {
-        if (events.load) {
-          events.load(xhr);
-        }
-      };
+      xhr.onload = onload;
     } else {
       xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4 && events.load) {
-          events.load(xhr);
+        if (xhr.readyState === 4) {
+          onload();
         }
       };
     }
 
     ['error', 'timeout'].forEach(function(method) {
-      xhr['on' + method] = function(e) {
+      xhr['on' + method] = function() {
         if (events[method]) {
           events[method](xhr);
         }
@@ -954,7 +943,7 @@
 
       var xhr = cors && supportXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
 
-      normalizeEvents(xhr);
+      normalizeXHREvents(xhr);
 
       xhr.on('load', function(xhr) {
         var headers = parseHeaders(xhr);
