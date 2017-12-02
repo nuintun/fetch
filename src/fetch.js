@@ -11,46 +11,6 @@ import { isCORS } from './utils';
 import { supportBlob, supportXDomainRequest } from './support';
 
 /**
- * @function normalizeXHREvents
- * @param {XMLHttpRequest|XDomainRequest} xhr
- */
-function normalizeXHREvents(xhr) {
-  var events = {};
-
-  function onload() {
-    if (events.load) {
-      events.load(xhr);
-    }
-  }
-
-  if ('onload' in xhr) {
-    xhr.onload = onload;
-  } else {
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        onload();
-      }
-    };
-  }
-
-  ['error', 'timeout'].forEach(function(method) {
-    xhr['on' + method] = function() {
-      if (events[method]) {
-        events[method](xhr);
-      }
-    };
-  });
-
-  xhr.on = function(type, fn) {
-    events[type] = fn;
-  };
-
-  xhr.onabort = function() {
-    events = {};
-  };
-}
-
-/**
  * @function parseHeaders
  * @param {XMLHttpRequest|XDomainRequest} xhr
  * @returns {Headers}
@@ -90,12 +50,16 @@ function responseURL(xhr, headers, url) {
 }
 
 /**
- * @function isUseXDomainRequest
- * @param {Request} request
- * @returns {boolean}
+ * @function createXHR
+ * @param {boolean} cors
+ * @returns {XMLHttpRequest|XDomainRequest}
  */
-function isUseXDomainRequest(request) {
-  return supportXDomainRequest && isCORS(request.url);
+function createXHR(cors) {
+  if (cors && supportXDomainRequest) {
+    return new XDomainRequest();
+  } else {
+    return new XMLHttpRequest();
+  }
 }
 
 /**
@@ -127,11 +91,24 @@ function fetch(input, init) {
       }
     }
 
-    var xhr = cors && supportXDomainRequest ? new XDomainRequest() : new XMLHttpRequest();
+    var xhr = createXHR(cors);
+    var supportLoad = 'onload' in xhr;
 
-    normalizeXHREvents(xhr);
+    function cleanXHR(xhr) {
+      if (supportLoad) {
+        xhr.onload = null;
+      } else {
+        xhr.onreadystatechange = null;
+      }
 
-    xhr.on('load', function(xhr) {
+      xhr.onerror = null;
+      xhr.ontimeout = null;
+      xhr.onabort = null;
+    }
+
+    function onload() {
+      cleanXHR(xhr);
+
       var headers = parseHeaders(xhr);
       var body = 'response' in xhr ? xhr.response : xhr.responseText;
       var options = {
@@ -143,39 +120,58 @@ function fetch(input, init) {
       };
 
       resolve(new Response(body, options));
-    });
+    }
 
-    xhr.on('error', function() {
+    if (supportLoad) {
+      xhr.onload = onload;
+    } else {
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          onload();
+        }
+      };
+    }
+
+    xhr.onerror = function() {
+      cleanXHR(xhr);
       reject(new TypeError('Network request failed'));
-    });
+    };
 
-    xhr.on('timeout', function() {
+    xhr.ontimeout = function() {
+      cleanXHR(xhr);
       reject(new TypeError('Network request timeout'));
-    });
+    };
 
-    xhr.open(request.method, request.url, true);
+    xhr.onabort = function() {
+      cleanXHR(xhr);
+      reject(new TypeError('Network request abort'));
+    };
 
-    xhr.timeout = Math.max(request.timeout >> 0, 0);
+    try {
+      xhr.open(request.method, request.url, true);
 
-    if (request.credentials === 'include') {
-      xhr.withCredentials = true;
-    } else if (request.credentials === 'omit') {
-      xhr.withCredentials = false;
+      xhr.timeout = Math.max(request.timeout >> 0, 0);
+      xhr.responseType = supportBlob ? 'blob' : 'text';
+
+      if (request.credentials === 'include') {
+        xhr.withCredentials = true;
+      } else if (request.credentials === 'omit') {
+        xhr.withCredentials = false;
+      }
+
+      if (xhr.setRequestHeader) {
+        var headers = request.headers;
+
+        headers.forEach(function(value, name) {
+          xhr.setRequestHeader(this._headerNames[name], value);
+        }, headers);
+      }
+
+      xhr.send(request.body === undefined ? null : request.body);
+    } catch (error) {
+      cleanXHR(xhr);
+      reject(error);
     }
-
-    if ('responseType' in xhr && supportBlob) {
-      xhr.responseType = 'blob';
-    }
-
-    if (xhr.setRequestHeader) {
-      var headers = request.headers;
-
-      headers.forEach(function(value, name) {
-        xhr.setRequestHeader(this._headerNames[name], value);
-      }, headers);
-    }
-
-    xhr.send(request.body === undefined ? null : request.body);
   });
 }
 
