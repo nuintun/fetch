@@ -54,7 +54,7 @@
   }
 
   var A = document.createElement('a');
-  var AUTH_RE = /^([a-z0-9.+-]+:)?(\/\/)(?:([^@/:]*)(?::([^@/]*))?@)?/i;
+  var AUTH_RE = /^([a-z0-9.+-]+:)?(\/\/)(?:([^/:]*)(?::([^/]*))?@)?/i;
 
   /**
    * @function normalizeURL
@@ -71,14 +71,10 @@
       username = user;
       password = pass;
 
-      return protocol + slash;
+      return (protocol || location.protocol) + slash;
     });
 
     A.href = url;
-
-    if (!A.protocol) {
-      A.protocol = location.protocol;
-    }
 
     if (!A.host) {
       A.host = location.host;
