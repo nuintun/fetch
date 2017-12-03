@@ -1,7 +1,7 @@
 /**
  * @module support
  * @license MIT
- * @version 2017/11/29
+ * @version 2017/11/28
  */
 
 export var supportFormData = 'FormData' in window;

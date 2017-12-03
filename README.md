@@ -10,5 +10,9 @@
 >
 > Notice: If `CORS` request IE8-9 use `XDomainRequest`
 
+### Thanks
+
+> [GitHub/fetch](https://github.com/github/fetch)
+
 [david-image]: http://img.shields.io/david/dev/nuintun/fetch.svg?style=flat-square
 [david-url]: https://david-dm.org/nuintun/fetch?type=dev
