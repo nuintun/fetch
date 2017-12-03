@@ -12,6 +12,10 @@ export var toString = Object.prototype.toString;
  * @returns {string}
  */
 export function typeOf(value) {
+  if (value === null || value === undefined) {
+    return String(value);
+  }
+
   return toString
     .call(value)
     .replace(/\[object (\w+)\]/, '$1')

@@ -31,6 +31,10 @@
    * @returns {string}
    */
   function typeOf(value) {
+    if (value === null || value === undefined) {
+      return String(value);
+    }
+
     return toString
       .call(value)
       .replace(/\[object (\w+)\]/, '$1')
