@@ -87,9 +87,7 @@ function fetch(input, init) {
       switch (request.mode) {
         case 'same-origin':
           return reject(
-            new TypeError(
-              'Fetch API: Request mode is "same-origin" but the URL\'s origin is not same as the request origin'
-            )
+            new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
           );
         case 'no-cors':
           return resolve(new Response(null, { status: 0, type: 'opaque' }));
@@ -138,7 +136,7 @@ function fetch(input, init) {
     }
 
     function rejectError(message) {
-      reject(new TypeError('Fetch API: Request ' + request.url + ' ' + message));
+      reject(new TypeError('Request ' + request.url + ' ' + message));
     }
 
     xhr.onerror = function() {

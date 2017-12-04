@@ -23,6 +23,22 @@ function normalizeMethod(method) {
 }
 
 /**
+ * @function normalizeMode
+ * @param {string} mode
+ * @returns {string}
+ */
+function normalizeMode(mode) {
+  switch (mode) {
+    case 'no-cors':
+    case 'navigate':
+    case 'same-origin':
+      return mode;
+    default:
+      return 'cors';
+  }
+}
+
+/**
  * @class Request
  * @constructor
  * @param {Request|string} input
@@ -33,7 +49,7 @@ export default function Request(input, options) {
   var length = arguments.length;
 
   if (length < 1) {
-    throw new TypeError('Request API: 1 argument required, but only ' + length + ' present');
+    throw new TypeError('Request construct need 1 argument required, but only ' + length + ' present');
   }
 
   Body.call(this);
@@ -67,15 +83,15 @@ export default function Request(input, options) {
     var url = String(input);
 
     if (hasAuth(url)) {
-      throw new TypeError('Request API: Request cannot be constructed from a URL that includes credentials: ' + url);
+      throw new TypeError('Request cannot be constructed from a URL that includes credentials: ' + url);
     }
 
     this.url = normalizeURL(url);
-    this.mode = options.mode || 'cors';
+    this.mode = normalizeMode(options.mode);
     this.method = normalizeMethod(options.method || 'GET');
 
     if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-      throw new TypeError('Request API: Request with GET/HEAD method cannot have body');
+      throw new TypeError('Request with GET/HEAD method cannot have body');
     }
 
     this.credentials = options.credentials || 'omit';

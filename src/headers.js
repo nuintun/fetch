@@ -17,7 +17,7 @@ function normalizeName(name) {
   name = String(name);
 
   if (!name || /[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
-    throw new TypeError('Headers API: Invalid header name');
+    throw new TypeError('Invalid header name');
   }
 
   return name.toLowerCase();
@@ -79,7 +79,7 @@ export default function Headers(headers) {
   } else if (Array.isArray(headers)) {
     headers.forEach(function(sequence) {
       if (sequence.length < 2) {
-        throw new TypeError('Headers API: Invalid header value');
+        throw new TypeError('Invalid header value');
       }
 
       var name = sequence[0];
@@ -95,7 +95,7 @@ export default function Headers(headers) {
     }
   } else {
     throw new TypeError(
-      "Headers API: The provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)"
+      "The headers provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)"
     );
   }
 }

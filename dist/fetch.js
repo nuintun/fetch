@@ -168,7 +168,7 @@
     name = String(name);
 
     if (!name || /[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
-      throw new TypeError('Headers API: Invalid header name');
+      throw new TypeError('Invalid header name');
     }
 
     return name.toLowerCase();
@@ -230,7 +230,7 @@
     } else if (Array.isArray(headers)) {
       headers.forEach(function(sequence) {
         if (sequence.length < 2) {
-          throw new TypeError('Headers API: Invalid header value');
+          throw new TypeError('Invalid header value');
         }
 
         var name = sequence[0];
@@ -246,7 +246,7 @@
       }
     } else {
       throw new TypeError(
-        "Headers API: The provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)"
+        "The headers provided value is not of type '(sequence<sequence<ByteString>> or record<ByteString, ByteString>)"
       );
     }
   }
@@ -679,6 +679,22 @@
   }
 
   /**
+   * @function normalizeMode
+   * @param {string} mode
+   * @returns {string}
+   */
+  function normalizeMode(mode) {
+    switch (mode) {
+      case 'no-cors':
+      case 'navigate':
+      case 'same-origin':
+        return mode;
+      default:
+        return 'cors';
+    }
+  }
+
+  /**
    * @class Request
    * @constructor
    * @param {Request|string} input
@@ -689,7 +705,7 @@
     var length = arguments.length;
 
     if (length < 1) {
-      throw new TypeError('Request API: 1 argument required, but only ' + length + ' present');
+      throw new TypeError('Request construct need 1 argument required, but only ' + length + ' present');
     }
 
     Body.call(this);
@@ -723,15 +739,15 @@
       var url = String(input);
 
       if (hasAuth(url)) {
-        throw new TypeError('Request API: Request cannot be constructed from a URL that includes credentials: ' + url);
+        throw new TypeError('Request cannot be constructed from a URL that includes credentials: ' + url);
       }
 
       this.url = normalizeURL(url);
-      this.mode = options.mode || 'cors';
+      this.mode = normalizeMode(options.mode);
       this.method = normalizeMethod(options.method || 'GET');
 
       if ((this.method === 'GET' || this.method === 'HEAD') && body) {
-        throw new TypeError('Request API: Request with GET/HEAD method cannot have body');
+        throw new TypeError('Request with GET/HEAD method cannot have body');
       }
 
       this.credentials = options.credentials || 'omit';
@@ -773,6 +789,7 @@
     switch (type) {
       case 'cors':
       case 'basic':
+      case 'error':
       case 'opaque':
         return type;
       default:
@@ -792,11 +809,11 @@
 
     options = options || {};
 
-    this.url = options.url || '';
-    this.type = normalizeType(options.type);
-    this.headers = new Headers(options.headers);
+    var status = options.status >> 0;
 
-    var status = options.status === undefined ? 200 : options.status;
+    if (status < 200 || status > 599) {
+      throw new TypeError('The response status provided (' + status + ') is outside the range [200, 599]');
+    }
 
     // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
     if (status === 1223) {
@@ -804,8 +821,11 @@
     }
 
     this.status = status;
+    this.url = options.url || '';
     this.ok = status >= 200 && status < 300;
-    this.redirected = redirectStatuses.indexOf(status) >= 0;
+    this.type = normalizeType(options.type);
+    this.headers = new Headers(options.headers);
+    this.redirected = options.redirected || false;
     this.statusText = options.statusText || (status === 200 ? 'OK' : '');
 
     this._initBody(body);
@@ -848,7 +868,7 @@
     assertArguments('Response', 'redirect', 1, arguments);
 
     if (redirectStatuses.indexOf(status) === -1) {
-      throw new RangeError('Response API: Invalid status code');
+      throw new RangeError('Invalid redirect status code');
     }
 
     return new Response(null, { status: status, headers: { location: url } });
@@ -939,9 +959,7 @@
         switch (request.mode) {
           case 'same-origin':
             return reject(
-              new TypeError(
-                'Fetch API: Request mode is "same-origin" but the URL\'s origin is not same as the request origin'
-              )
+              new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
             );
           case 'no-cors':
             return resolve(new Response(null, { status: 0, type: 'opaque' }));
@@ -990,7 +1008,7 @@
       }
 
       function rejectError(message) {
-        reject(new TypeError('Fetch API: Request ' + request.url + ' ' + message));
+        reject(new TypeError('Request ' + request.url + ' ' + message));
       }
 
       xhr.onerror = function() {
