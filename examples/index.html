@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <script src="./es5-shim.min.js"></script>
+    <script src="./es5-safe.min.js"></script>
     <script src="./es6-promise.min.js"></script>
     <script src="./json2.min.js"></script>
     <script src="../dist/fetch.min.js"></script>
@@ -36,37 +36,11 @@
   </head>
   <body>
     <div>
-      <input type="button" class="ui-button" onclick="send()" value="fetch" />
+      <input id="fetch" type="button" class="ui-button" value="fetch" />
     </div>
     <div>
       <pre id="output">Pleace click the fetch button!</pre>
     </div>
-    <script>
-      var output = document.getElementById('output');
-
-      function send() {
-        console.time('Fetched');
-
-        var result = fetch('/package.json?v=1.0.0#id=fetch', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-
-        result.then(function (response) {
-          console.log('Header: ', response.headers.get('Content-Type'));
-
-          var json = response.json();
-
-          console.log('Response: ', response);
-
-          return json;
-        }).then(function (json) {
-          console.log('Got json: ', json);
-          console.timeEnd('Fetched');
-
-          output.innerText = new Date().toISOString() + '\n\n' + JSON.stringify(json, null, 2);
-        })['catch'](function (error) {
-          console.error('Failed: ', error);
-          console.timeEnd('Fetched');
-        });
-      }
-    </script>
+    <script src="./index.js"></script>
   </body>
 </html>
