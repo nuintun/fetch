@@ -37,22 +37,22 @@
 
     result
       .then(function(response) {
-        console.log('Header: ', response.headers.get('Content-Type'));
+        console.log('Header:', response.headers.get('Content-Type'));
 
         var json = response.json();
 
-        console.log('Response: ', response);
+        console.log('Response:', response);
 
         return json;
       })
       .then(function(json) {
-        console.log('Got json: ', json);
+        console.log('Got json:', json);
         console.timeEnd('Fetched');
 
         output.innerText = new Date().toISOString() + ': ' + url + '\n\n' + JSON.stringify(json, null, 2);
       })
       ['catch'](function(error) {
-        console.error('Failed: ', error);
+        console.error('Failed:', error);
         console.timeEnd('Fetched');
       });
   }
