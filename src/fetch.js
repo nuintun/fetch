@@ -90,7 +90,11 @@ function fetch(input, init) {
             new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
           );
         case 'no-cors':
-          return resolve(new Response(null, { status: 0, type: 'opaque' }));
+          var response = new Response(null, { type: 'opaque' });
+
+          response.status = 0;
+
+          return resolve(response);
       }
     }
 
@@ -122,7 +126,11 @@ function fetch(input, init) {
         url: responseURL(xhr, headers) || request.url.replace(/#.*/, '')
       };
 
-      resolve(new Response(body, options));
+      console.log(options.status);
+
+      var response = new Response(body, options);
+
+      resolve(response);
     }
 
     if (supportLoad) {
