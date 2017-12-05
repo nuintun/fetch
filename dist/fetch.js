@@ -820,13 +820,13 @@
 
     var status = options.status >> 0;
 
-    if (status < 200 || status > 599) {
-      throw new TypeError('The response status provided (' + status + ') is outside the range [200, 599]');
-    }
-
     // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
     if (status === 1223) {
       status = 204;
+    }
+
+    if (status < 200 || status > 599) {
+      throw new TypeError('The response status provided (' + status + ') is outside the range [200, 599]');
     }
 
     this.status = status;
