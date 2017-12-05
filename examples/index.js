@@ -32,7 +32,7 @@
   function send() {
     console.time('Fetched');
 
-    var result = fetch('/package.json?v=1.0.0#id=fetch', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    var result = fetch('../package.json?v=1.0.0#id=fetch', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
 
     result
       .then(function(response) {
