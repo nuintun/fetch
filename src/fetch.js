@@ -126,7 +126,7 @@ function fetch(input, init) {
         url: responseURL(xhr, headers) || request.url.replace(/#.*/, '')
       };
 
-      console.log(options.status);
+      console.log(options.status, xhr);
 
       var response = new Response(body, options);
 
