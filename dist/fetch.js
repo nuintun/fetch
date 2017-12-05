@@ -790,23 +790,6 @@
   var redirectStatuses = [301, 302, 303, 307, 308];
 
   /**
-   * @function normalizeType
-   * @param {string} type
-   * @returns {string}
-   */
-  function normalizeType(type) {
-    switch (type) {
-      case 'cors':
-      case 'basic':
-      case 'error':
-      case 'opaque':
-        return type;
-      default:
-        return 'default';
-    }
-  }
-
-  /**
    * @class Response
    * @constructor
    * @param {any} body
@@ -818,7 +801,7 @@
 
     options = options || {};
 
-    var status = options.status >> 0;
+    var status = options.hasOwnProperty('status') ? options.status >> 0 : 200;
 
     // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
     if (status === 1223) {
@@ -830,17 +813,29 @@
     }
 
     this.status = status;
-    this.url = options.url || '';
     this.ok = status >= 200 && status < 300;
-    this.type = normalizeType(options.type);
     this.headers = new Headers(options.headers);
-    this.redirected = options.redirected || false;
     this.statusText = options.statusText || (status === 200 ? 'OK' : '');
 
     this._initBody(body);
   }
 
   extend(Body, Response);
+
+  /**
+   * @property url
+   */
+  Response.prototype.url = '';
+
+  /**
+   * @property type
+   */
+  Response.prototype.type = 'default';
+
+  /**
+   * @property redirected
+   */
+  Response.prototype.redirected = false;
 
   /**
    * @method clone
@@ -971,9 +966,12 @@
               new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
             );
           case 'no-cors':
-            var response = new Response(null, { type: 'opaque' });
+            var response = new Response();
 
+            response.ok = false;
             response.status = 0;
+            response.statusText = '';
+            response.type = 'opaque';
 
             return resolve(response);
         }
@@ -994,6 +992,10 @@
         xhr.onabort = null;
       }
 
+      function rejectError(message) {
+        reject(new TypeError('Request ' + request.url + ' ' + message));
+      }
+
       function onload() {
         cleanXHR(xhr);
 
@@ -1001,15 +1003,18 @@
         var body = 'response' in xhr ? xhr.response : xhr.responseText;
         var options = {
           headers: headers,
-          status: xhr.status,
-          statusText: xhr.statusText,
-          type: cors ? 'cors' : 'basic',
-          url: responseURL(xhr, headers) || request.url.replace(/#.*/, '')
+          status: xhr.status || 200,
+          statusText: xhr.statusText
         };
 
-        console.log(options.status, xhr);
+        try {
+          var response = new Response(body, options);
+        } catch (error) {
+          return rejectError(error);
+        }
 
-        var response = new Response(body, options);
+        response.type = cors ? 'cors' : 'basic';
+        response.url = responseURL(xhr, headers) || request.url.replace(/#.*/, '');
 
         resolve(response);
       }
@@ -1022,10 +1027,6 @@
             onload();
           }
         };
-      }
-
-      function rejectError(message) {
-        reject(new TypeError('Request ' + request.url + ' ' + message));
       }
 
       xhr.onerror = function() {

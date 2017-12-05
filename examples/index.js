@@ -27,12 +27,13 @@
     };
   }
 
+  var url = 'https://api.github.com';
   var output = document.getElementById('output');
 
   function send() {
     console.time('Fetched');
 
-    var result = fetch('../package.json?v=1.0.0#id=fetch', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    var result = fetch(url);
 
     result
       .then(function(response) {
@@ -48,7 +49,7 @@
         console.log('Got json: ', json);
         console.timeEnd('Fetched');
 
-        output.innerText = new Date().toISOString() + '\n\n' + JSON.stringify(json, null, 2);
+        output.innerText = new Date().toISOString() + ': ' + url + '\n\n' + JSON.stringify(json, null, 2);
       })
       ['catch'](function(error) {
         console.error('Failed: ', error);

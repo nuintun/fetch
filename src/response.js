@@ -11,23 +11,6 @@ import Body from './body';
 var redirectStatuses = [301, 302, 303, 307, 308];
 
 /**
- * @function normalizeType
- * @param {string} type
- * @returns {string}
- */
-function normalizeType(type) {
-  switch (type) {
-    case 'cors':
-    case 'basic':
-    case 'error':
-    case 'opaque':
-      return type;
-    default:
-      return 'default';
-  }
-}
-
-/**
  * @class Response
  * @constructor
  * @param {any} body
@@ -39,7 +22,7 @@ export default function Response(body, options) {
 
   options = options || {};
 
-  var status = options.status >> 0;
+  var status = options.hasOwnProperty('status') ? options.status >> 0 : 200;
 
   // https://stackoverflow.com/questions/10046972/msie-returns-status-code-of-1223-for-ajax-request
   if (status === 1223) {
@@ -51,17 +34,29 @@ export default function Response(body, options) {
   }
 
   this.status = status;
-  this.url = options.url || '';
   this.ok = status >= 200 && status < 300;
-  this.type = normalizeType(options.type);
   this.headers = new Headers(options.headers);
-  this.redirected = options.redirected || false;
   this.statusText = options.statusText || (status === 200 ? 'OK' : '');
 
   this._initBody(body);
 }
 
 extend(Body, Response);
+
+/**
+ * @property url
+ */
+Response.prototype.url = '';
+
+/**
+ * @property type
+ */
+Response.prototype.type = 'default';
+
+/**
+ * @property redirected
+ */
+Response.prototype.redirected = false;
 
 /**
  * @method clone

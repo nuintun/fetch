@@ -90,9 +90,12 @@ function fetch(input, init) {
             new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
           );
         case 'no-cors':
-          var response = new Response(null, { type: 'opaque' });
+          var response = new Response();
 
+          response.ok = false;
           response.status = 0;
+          response.statusText = '';
+          response.type = 'opaque';
 
           return resolve(response);
       }
@@ -113,6 +116,10 @@ function fetch(input, init) {
       xhr.onabort = null;
     }
 
+    function rejectError(message) {
+      reject(new TypeError('Request ' + request.url + ' ' + message));
+    }
+
     function onload() {
       cleanXHR(xhr);
 
@@ -120,15 +127,18 @@ function fetch(input, init) {
       var body = 'response' in xhr ? xhr.response : xhr.responseText;
       var options = {
         headers: headers,
-        status: xhr.status,
-        statusText: xhr.statusText,
-        type: cors ? 'cors' : 'basic',
-        url: responseURL(xhr, headers) || request.url.replace(/#.*/, '')
+        status: xhr.status || 200,
+        statusText: xhr.statusText
       };
 
-      console.log(options.status, xhr);
+      try {
+        var response = new Response(body, options);
+      } catch (error) {
+        return rejectError(error);
+      }
 
-      var response = new Response(body, options);
+      response.type = cors ? 'cors' : 'basic';
+      response.url = responseURL(xhr, headers) || request.url.replace(/#.*/, '');
 
       resolve(response);
     }
@@ -141,10 +151,6 @@ function fetch(input, init) {
           onload();
         }
       };
-    }
-
-    function rejectError(message) {
-      reject(new TypeError('Request ' + request.url + ' ' + message));
     }
 
     xhr.onerror = function() {
