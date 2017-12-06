@@ -27,13 +27,16 @@
     };
   }
 
-  var url = 'https://api.github.com';
+  var index = 1;
+  var url = '//httpbin.org/get?fetch=true';
   var output = document.getElementById('output');
 
-  function send() {
-    console.time('Fetched');
+  function send(index) {
+    var bookmark = 'Fetch-' + index;
 
-    var result = fetch(url);
+    console.time(bookmark);
+
+    var result = fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
 
     result
       .then(function(response) {
@@ -47,15 +50,26 @@
       })
       .then(function(json) {
         console.log('Got json:', json);
-        console.timeEnd('Fetched');
+        console.timeEnd(bookmark);
 
-        output.innerText = new Date().toISOString() + ': ' + url + '\n\n' + JSON.stringify(json, null, 2);
+        output.innerText =
+          '🌏 URL: ' +
+          location.protocol +
+          url +
+          '\n' +
+          '🕗 Time: ' +
+          new Date().toISOString() +
+          '\n' +
+          '🔊 Response: ' +
+          JSON.stringify(json, null, 2);
       })
       ['catch'](function(error) {
         console.error('Failed:', error);
-        console.timeEnd('Fetched');
+        console.timeEnd(bookmark);
       });
   }
 
-  document.getElementById('fetch').onclick = send;
+  document.getElementById('fetch').onclick = function() {
+    send(index++);
+  };
 })();
