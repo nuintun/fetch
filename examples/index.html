@@ -5,38 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link type="text/css" rel="stylesheet" href="./index.css" />
     <script src="./es5-safe.min.js"></script>
     <script src="./es6-promise.min.js"></script>
     <script src="./json2.min.js"></script>
     <script src="../dist/fetch.min.js"></script>
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        text-align: center;
-        font: 14px/1.5 Consolas, "Lucida Console", monospace;
-      }
-
-      .ui-button {
-        margin-top: 66px;
-      }
-
-      pre {
-        margin: 20px 0;
-        text-align: left;
-        background: #000;
-        color: #fff;
-        padding: 10px;
-        display: inline-block;
-        *display: inline;
-        *zoom: 1;
-      }
-    </style>
   </head>
   <body>
     <div>
-      <input id="fetch" type="button" class="ui-button" value="fetch" />
+      <a id="fetch" hidefocus="true" href="javascript:;" class="ui-button ui-button-green">⚡ fetch ⚡</a>
     </div>
     <div>
       <pre id="output">✨ Pleace click the fetch button! ✨</pre>

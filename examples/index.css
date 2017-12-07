@@ -1,0 +1,88 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  font: 14px/1.5 Consolas, "Lucida Console", monospace;
+}
+
+body {
+  padding-top: 66px;
+}
+
+a,
+a:hover,
+a:active,
+a:link,
+a:focus {
+  outline: none;
+  text-decoration: none;
+}
+
+pre {
+  margin: 20px 0;
+  text-align: left;
+  background: #000;
+  color: #fff;
+  padding: 10px;
+  display: inline-block;
+  *display: inline;
+  *zoom: 1;
+}
+
+.ui-button {
+  display: inline-block;
+  *display: inline;
+  *zoom: 1;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: normal;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  -ms-touch-action: manipulation;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  background-image: none;
+  border: 1px solid transparent;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -webkit-transition: border 0.25s linear, color 0.25s linear, background-color 0.25s linear;
+  transition: border 0.25s linear, color 0.25s linear, background-color 0.25s linear;
+}
+.ui-button:hover,
+.ui-button:focus,
+.ui-button.focus {
+  color: #333;
+  text-decoration: none;
+}
+.ui-button:active,
+.ui-button.active {
+  outline: none;
+  background-image: none;
+  -webkit-box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+
+.ui-button-green {
+  color: #fff;
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+.ui-button-green:hover,
+.ui-button-green:focus,
+.ui-button-green.focus,
+.ui-button-green:active,
+.ui-button-green.active {
+  color: #fff;
+  background-color: #449d44;
+  border-color: #398439;
+}
+.ui-button-green:active,
+.ui-button-green.active {
+  background-image: none;
+}
