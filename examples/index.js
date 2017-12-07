@@ -28,15 +28,24 @@
   }
 
   var index = 1;
+  var locked = false;
   var url = '//httpbin.org/get?fetch=true';
   var output = document.getElementById('output');
 
-  function send(index) {
-    var bookmark = 'Fetch-' + index;
+  function send() {
+    if (locked) {
+      return console.warn('Already have a fetch, please wait for the previous completion.');
+    }
+
+    var bookmark = 'Fetch-' + index++;
+
+    locked = true;
 
     console.time(bookmark);
 
     var result = fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+
+    output.innerText = '⚡ Loading...';
 
     result
       .then(function(response) {
@@ -62,14 +71,16 @@
           '\n' +
           '🔊 Response: ' +
           JSON.stringify(json, null, 2);
+
+        locked = false;
       })
       ['catch'](function(error) {
         console.error('Failed:', error);
         console.timeEnd(bookmark);
+
+        locked = false;
       });
   }
 
-  document.getElementById('fetch').onclick = function() {
-    send(index++);
-  };
+  document.getElementById('fetch').onclick = send;
 })();
