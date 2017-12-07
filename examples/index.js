@@ -29,7 +29,6 @@
 
   var index = 1;
   var locked = false;
-  var url = '//httpbin.org/get?fetch=true';
   var output = document.getElementById('output');
 
   function send() {
@@ -37,9 +36,10 @@
       return console.warn('Already have a fetch, please wait for the previous completion.');
     }
 
-    var bookmark = 'Fetch-' + index++;
-
     locked = true;
+
+    var bookmark = 'Fetch-' + index++;
+    var url = '//httpbin.org/get?fetch=true&timestamp=' + +new Date();
 
     console.time(bookmark);
 
