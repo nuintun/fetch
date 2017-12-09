@@ -8,7 +8,7 @@
 
 > If not `CORS` support `IE >= 7` else support `IE >= 8`
 >
-> Notice: If `CORS` request IE8-9 use `XDomainRequest`
+> Notice: If `CORS` request IE8-9 use [XDomainRequest](https://developer.mozilla.org/en-US/docs/Web/API/XDomainRequest)
 
 ### Examples
 
