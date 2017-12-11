@@ -44,7 +44,7 @@
 
     console.time(bookmark);
 
-    var result = fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    var result = fetch(url);
 
     output.innerText = '⚡ Loading...';
 
