@@ -682,6 +682,8 @@
    * @returns {string}
    */
   function normalizeMethod(method) {
+    method = String(method);
+
     var upcased = method.toUpperCase();
 
     return methods.indexOf(upcased) > -1 ? upcased : method;
@@ -753,7 +755,7 @@
 
       this.url = normalizeURL(url);
       this.mode = normalizeMode(options.mode);
-      this.method = normalizeMethod(options.method || 'GET');
+      this.method = options.hasOwnProperty('method') ? normalizeMethod(options.method) : 'GET';
 
       if ((this.method === 'GET' || this.method === 'HEAD') && body) {
         throw new TypeError('Request with GET/HEAD method cannot have body');
