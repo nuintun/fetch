@@ -1006,7 +1006,6 @@
        * @param {string} message
        */
       function rejectError(message) {
-        cleanXHR(xhr);
         reject(new TypeError('Request ' + request.url + ' ' + message));
       }
 
@@ -1044,14 +1043,17 @@
       }
 
       xhr.onerror = function() {
+        cleanXHR(xhr);
         rejectError('failed');
       };
 
       xhr.ontimeout = function() {
+        cleanXHR(xhr);
         rejectError('timeout');
       };
 
       xhr.onabort = function() {
+        cleanXHR(xhr);
         rejectError('aborted');
       };
 
