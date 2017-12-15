@@ -227,8 +227,8 @@
    * @param {Object} headers
    */
   function Headers(headers) {
-    this.map = {};
-    this._headerNames = {};
+    this['<names>'] = {};
+    this['<headers>'] = {};
 
     if (headers === undefined) return this;
 
@@ -270,13 +270,13 @@
 
     var key = normalizeName(name);
 
-    this._headerNames[key] = name;
+    this['<names>'][key] = name;
 
-    var oldValue = this.map[key];
+    var oldValue = this['<headers>'][key];
 
     value = normalizeValue(value);
 
-    this.map[key] = oldValue ? oldValue + ',' + value : value;
+    this['<headers>'][key] = oldValue ? oldValue + ',' + value : value;
   };
 
   /**
@@ -288,8 +288,8 @@
 
     name = normalizeName(name);
 
-    delete this.map[name];
-    delete this._headerNames[name];
+    delete this['<headers>'][name];
+    delete this['<names>'][name];
   };
 
   /**
@@ -302,7 +302,7 @@
 
     name = normalizeName(name);
 
-    return this.has(name) ? this.map[name] : null;
+    return this.has(name) ? this['<headers>'][name] : null;
   };
 
   /**
@@ -313,7 +313,7 @@
   Headers.prototype.has = function(name) {
     assertArguments('Headers', 'has', 1, arguments.length);
 
-    return this.map.hasOwnProperty(normalizeName(name));
+    return this['<headers>'].hasOwnProperty(normalizeName(name));
   };
 
   /**
@@ -326,8 +326,8 @@
 
     var key = normalizeName(name);
 
-    this._headerNames[key] = name;
-    this.map[key] = normalizeValue(value);
+    this['<names>'][key] = name;
+    this['<headers>'][key] = normalizeValue(value);
   };
 
   /**
@@ -338,9 +338,11 @@
   Headers.prototype.forEach = function(callback, context) {
     assertArguments('Headers', 'forEach', 1, arguments.length);
 
-    for (var name in this.map) {
-      if (this.map.hasOwnProperty(name)) {
-        callback.call(context, this.map[name], name, this);
+    var headers = this['<headers>'];
+
+    for (var name in headers) {
+      if (headers.hasOwnProperty(name)) {
+        callback.call(context, headers[name], name, this);
       }
     }
   };
@@ -556,44 +558,45 @@
   }
 
   /**
-   * @method _initBody
    * @private
+   * @method <body>
+   * @description Init body
    * @param {any} body
    */
-  Body.prototype._initBody = function(body) {
+  Body.prototype['<body>'] = function(body) {
     this.body = body;
 
     var noContentType = !this.headers.has('Content-Type');
 
     if (typeOf(body) === 'string') {
-      this._bodyText = body;
+      this['<text>'] = body;
 
       if (noContentType) {
         this.headers.set('Content-Type', 'text/plain;charset=UTF-8');
       }
     } else if (supportBlob && Blob.prototype.isPrototypeOf(body)) {
-      this._bodyBlob = body;
+      this['<blob>'] = body;
 
-      if (noContentType && this._bodyBlob.type) {
-        this.headers.set('Content-Type', this._bodyBlob.type);
+      if (noContentType && this['<blob>'].type) {
+        this.headers.set('Content-Type', this['<blob>'].type);
       }
     } else if (supportFormData && FormData.prototype.isPrototypeOf(body)) {
       this._bodyFormData = body;
     } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
-      this._bodyText = body.toString();
+      this['<text>'] = body.toString();
 
       if (noContentType) {
         this.headers.set('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
       }
     } else if (supportArrayBuffer && supportBlob && isDataView(body)) {
-      this._bodyArrayBuffer = bufferClone(body.buffer);
+      this['<arrayBuffer>'] = bufferClone(body.buffer);
       // IE 10-11 can't handle a DataView body.
-      this.body = new Blob([this._bodyArrayBuffer]);
+      this.body = new Blob([this['<arrayBuffer>']]);
     } else if (supportArrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
-      this._bodyArrayBuffer = bufferClone(body);
+      this['<arrayBuffer>'] = bufferClone(body);
     } else {
       this.body = null;
-      this._bodyText = '';
+      this['<text>'] = '';
     }
   };
 
@@ -605,14 +608,14 @@
     Body.prototype.blob = function() {
       consumed(this);
 
-      if (this._bodyBlob) {
-        return Promise.resolve(this._bodyBlob);
-      } else if (this._bodyArrayBuffer) {
-        return Promise.resolve(new Blob([this._bodyArrayBuffer]));
+      if (this['<blob>']) {
+        return Promise.resolve(this['<blob>']);
+      } else if (this['<arrayBuffer>']) {
+        return Promise.resolve(new Blob([this['<arrayBuffer>']]));
       } else if (this._bodyFormData) {
         throw new Error('Could not read FormData body as blob');
       } else {
-        return Promise.resolve(new Blob([this._bodyText]));
+        return Promise.resolve(new Blob([this['<text>']]));
       }
     };
 
@@ -621,10 +624,10 @@
      * @returns {Promise}
      */
     Body.prototype.arrayBuffer = function() {
-      if (this._bodyArrayBuffer) {
+      if (this['<arrayBuffer>']) {
         consumed(this);
 
-        return Promise.resolve(this._bodyArrayBuffer);
+        return Promise.resolve(this['<arrayBuffer>']);
       } else {
         return this.blob().then(readBlobAsArrayBuffer);
       }
@@ -638,14 +641,14 @@
   Body.prototype.text = function() {
     consumed(this);
 
-    if (this._bodyBlob) {
-      return readBlobAsText(this._bodyBlob);
-    } else if (this._bodyArrayBuffer) {
-      return Promise.resolve(readArrayBufferAsText(this._bodyArrayBuffer));
+    if (this['<blob>']) {
+      return readBlobAsText(this['<blob>']);
+    } else if (this['<arrayBuffer>']) {
+      return Promise.resolve(readArrayBufferAsText(this['<arrayBuffer>']));
     } else if (this._bodyFormData) {
       throw new Error('Could not read FormData body as text');
     } else {
-      return Promise.resolve(this._bodyText);
+      return Promise.resolve(this['<text>']);
     }
   };
 
@@ -768,7 +771,7 @@
       this.headers = new Headers(options.headers || {});
     }
 
-    this._initBody(body);
+    this['<body>'](body);
   }
 
   extend(Body, Request);
@@ -819,7 +822,7 @@
     this.headers = new Headers(options.headers);
     this.statusText = options.statusText || (status === 200 ? 'OK' : '');
 
-    this._initBody(body);
+    this['<body>'](body);
   }
 
   extend(Body, Response);

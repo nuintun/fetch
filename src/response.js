@@ -38,7 +38,7 @@ export default function Response(body, options) {
   this.headers = new Headers(options.headers);
   this.statusText = options.statusText || (status === 200 ? 'OK' : '');
 
-  this._initBody(body);
+  this['<body>'](body);
 }
 
 extend(Body, Response);

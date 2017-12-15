@@ -103,7 +103,7 @@ export default function Request(input, options) {
     this.headers = new Headers(options.headers || {});
   }
 
-  this._initBody(body);
+  this['<body>'](body);
 }
 
 extend(Body, Request);

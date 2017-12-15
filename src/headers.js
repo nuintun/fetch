@@ -67,8 +67,8 @@ function iteratorFor(items) {
  * @param {Object} headers
  */
 export default function Headers(headers) {
-  this.map = {};
-  this._headerNames = {};
+  this['<names>'] = {};
+  this['<headers>'] = {};
 
   if (headers === undefined) return this;
 
@@ -110,13 +110,13 @@ Headers.prototype.append = function(name, value) {
 
   var key = normalizeName(name);
 
-  this._headerNames[key] = name;
+  this['<names>'][key] = name;
 
-  var oldValue = this.map[key];
+  var oldValue = this['<headers>'][key];
 
   value = normalizeValue(value);
 
-  this.map[key] = oldValue ? oldValue + ',' + value : value;
+  this['<headers>'][key] = oldValue ? oldValue + ',' + value : value;
 };
 
 /**
@@ -128,8 +128,8 @@ Headers.prototype['delete'] = function(name) {
 
   name = normalizeName(name);
 
-  delete this.map[name];
-  delete this._headerNames[name];
+  delete this['<headers>'][name];
+  delete this['<names>'][name];
 };
 
 /**
@@ -142,7 +142,7 @@ Headers.prototype.get = function(name) {
 
   name = normalizeName(name);
 
-  return this.has(name) ? this.map[name] : null;
+  return this.has(name) ? this['<headers>'][name] : null;
 };
 
 /**
@@ -153,7 +153,7 @@ Headers.prototype.get = function(name) {
 Headers.prototype.has = function(name) {
   assertArguments('Headers', 'has', 1, arguments.length);
 
-  return this.map.hasOwnProperty(normalizeName(name));
+  return this['<headers>'].hasOwnProperty(normalizeName(name));
 };
 
 /**
@@ -166,8 +166,8 @@ Headers.prototype.set = function(name, value) {
 
   var key = normalizeName(name);
 
-  this._headerNames[key] = name;
-  this.map[key] = normalizeValue(value);
+  this['<names>'][key] = name;
+  this['<headers>'][key] = normalizeValue(value);
 };
 
 /**
@@ -178,9 +178,11 @@ Headers.prototype.set = function(name, value) {
 Headers.prototype.forEach = function(callback, context) {
   assertArguments('Headers', 'forEach', 1, arguments.length);
 
-  for (var name in this.map) {
-    if (this.map.hasOwnProperty(name)) {
-      callback.call(context, this.map[name], name, this);
+  var headers = this['<headers>'];
+
+  for (var name in headers) {
+    if (headers.hasOwnProperty(name)) {
+      callback.call(context, headers[name], name, this);
     }
   }
 };
