@@ -581,7 +581,7 @@
         this.headers.set('Content-Type', this['<blob>'].type);
       }
     } else if (supportFormData && FormData.prototype.isPrototypeOf(body)) {
-      this._bodyFormData = body;
+      this['<formData>'] = body;
     } else if (supportSearchParams && URLSearchParams.prototype.isPrototypeOf(body)) {
       this['<text>'] = body.toString();
 
@@ -612,7 +612,7 @@
         return Promise.resolve(this['<blob>']);
       } else if (this['<arrayBuffer>']) {
         return Promise.resolve(new Blob([this['<arrayBuffer>']]));
-      } else if (this._bodyFormData) {
+      } else if (this['<formData>']) {
         throw new Error('Could not read FormData body as blob');
       } else {
         return Promise.resolve(new Blob([this['<text>']]));
@@ -645,7 +645,7 @@
       return readBlobAsText(this['<blob>']);
     } else if (this['<arrayBuffer>']) {
       return Promise.resolve(readArrayBufferAsText(this['<arrayBuffer>']));
-    } else if (this._bodyFormData) {
+    } else if (this['<formData>']) {
       throw new Error('Could not read FormData body as text');
     } else {
       return Promise.resolve(this['<text>']);
