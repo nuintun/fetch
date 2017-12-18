@@ -1,11 +1,11 @@
 /**
-* @module fetch
-* @author nuintun
-* @license MIT
-* @version 0.0.1
-* @description A pure JavaScript window.fetch polyfill.
-* @see https://nuintun.github.io/fetch
-*/
+ * @module fetch
+ * @author nuintun
+ * @license MIT
+ * @version 0.0.1
+ * @description A pure JavaScript window.fetch polyfill.
+ * @see https://nuintun.github.io/fetch
+ */
 
 (function () {
   'use strict';
