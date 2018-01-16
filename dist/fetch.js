@@ -10,7 +10,7 @@
 (function () {
   'use strict';
 
-  if (window.fetch) return;
+  if (typeof window.fetch === 'function') return;
 
   /**
    * @module support
@@ -392,8 +392,6 @@
   if (supportIterable) {
     Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
   }
-
-  window.Headers = Headers;
 
   /**
    * @module body
@@ -784,8 +782,6 @@
     return new Request(this, { body: this.body });
   };
 
-  window.Request = Request;
-
   /**
    * @module response
    * @license MIT
@@ -882,8 +878,6 @@
 
     return new Response(null, { status: status, headers: { location: url } });
   };
-
-  window.Response = Response;
 
   /**
    * @module fetch
@@ -1086,5 +1080,8 @@
   }
 
   window.fetch = fetch;
+  window.Headers = Headers;
+  window.Request = Request;
+  window.Response = Response;
 
 }());

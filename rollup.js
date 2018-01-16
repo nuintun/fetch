@@ -44,7 +44,7 @@ rollup
           indent: true,
           strict: true,
           banner: banner,
-          intro: 'if (window.fetch) return;'
+          intro: `if (typeof window.fetch === 'function') return;`
         })
         .then(result => {
           fs.writeFileSync(src, result.code);

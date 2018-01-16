@@ -115,5 +115,3 @@ extend(Body, Request);
 Request.prototype.clone = function() {
   return new Request(this, { body: this.body });
 };
-
-window.Request = Request;

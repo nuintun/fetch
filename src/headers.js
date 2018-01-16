@@ -232,5 +232,3 @@ Headers.prototype.entries = function() {
 if (supportIterable) {
   Headers.prototype[Symbol.iterator] = Headers.prototype.entries;
 }
-
-window.Headers = Headers;

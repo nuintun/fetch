@@ -204,4 +204,7 @@ function fetch(input, init) {
   });
 }
 
-window.fetch = fetch;
+this.fetch = fetch;
+this.Headers = Headers;
+this.Request = Request;
+this.Response = Response;

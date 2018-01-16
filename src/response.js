@@ -98,5 +98,3 @@ Response.redirect = function(url, status) {
 
   return new Response(null, { status: status, headers: { location: url } });
 };
-
-window.Response = Response;
