@@ -33,10 +33,10 @@ async function build(inputOptions, outputOptions) {
   await fs.outputFile(file, result.code);
   console.log(`Build ${file} success!`);
 
-  await fs.outputFile(min, minify.code);
+  await fs.outputFile(min, banner + minify.code);
   console.log(`Build ${min} success!`);
 
-  await fs.outputFile(map, minify.code);
+  await fs.outputFile(map, minify.map);
   console.log(`Build ${map} success!`);
 }
 
