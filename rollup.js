@@ -52,7 +52,8 @@ const banner = `/**
 
 const inputOptions = {
   context: 'window',
-  input: 'src/fetch.js'
+  input: 'src/fetch.js',
+  acorn: { allowReturnOutsideFunction: true }
 };
 
 const outputOptions = {
@@ -62,8 +63,7 @@ const outputOptions = {
   strict: true,
   legacy: true,
   banner: banner,
-  file: 'dist/fetch.js',
-  intro: `if (typeof window.fetch === 'function') return;`
+  file: 'dist/fetch.js'
 };
 
 build(inputOptions, outputOptions);

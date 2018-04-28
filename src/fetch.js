@@ -4,6 +4,7 @@
  * @version 2017/11/28
  */
 
+import './intro';
 import { supportBlob, supportXDomainRequest } from './support';
 import { isCORS, assertArguments } from './utils';
 import Request from './request';

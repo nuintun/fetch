@@ -40,7 +40,7 @@
     locked = true;
 
     var bookmark = 'Fetch-' + index++;
-    var url = '//httpbin.org/get?fetch=true&timestamp=' + +new Date();
+    var url = 'https://httpbin.org/get?fetch=true&timestamp=' + +new Date();
 
     console.time(bookmark);
 
