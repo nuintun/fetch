@@ -63,7 +63,6 @@
 
         output.innerText =
           '🌏 URL: ' +
-          location.protocol +
           url +
           '\n' +
           '🕗 Time: ' +
