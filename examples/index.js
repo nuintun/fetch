@@ -60,7 +60,6 @@
       })
       .then(function(json) {
         console.log('Got json:', json);
-        console.timeEnd(bookmark);
 
         output.innerText =
           '🌏 URL: ' +
@@ -72,14 +71,14 @@
           '\n' +
           '🔊 Response: ' +
           JSON.stringify(json, null, 2);
-
-        locked = false;
       })
       ['catch'](function(error) {
         console.error('Failed:', error);
-        console.timeEnd(bookmark);
-
+      })
+      ['finally'](function() {
         locked = false;
+
+        console.timeEnd(bookmark);
       });
   }
 
