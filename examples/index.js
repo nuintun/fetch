@@ -72,6 +72,8 @@
           JSON.stringify(json, null, 2);
       })
       ['catch'](function(error) {
+        output.innerText = '💔 Fetch error: ' + error.message;
+
         console.error('Failed:', error);
       })
       ['finally'](function() {
