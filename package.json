@@ -6,6 +6,8 @@
     "name": "nuintun",
     "email": "nuintun@qq.com"
   },
+  "main": "dist/fetch.js",
+  "files": ["dist/fetch.js", "dist/fetch.min.js", "dist/fetch.js.map"],
   "homepage": "https://github.com/nuintun/fetch#readme",
   "repository": {
     "type": "git",
@@ -17,7 +19,7 @@
   "license": "MIT",
   "devDependencies": {
     "rollup": "^0.58.2",
-    "fs-extra": "^5.0.0",
+    "fs-extra": "^6.0.0",
     "uglify-es": "^3.3.9"
   }
 }
