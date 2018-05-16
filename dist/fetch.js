@@ -1073,7 +1073,7 @@
           var headers = request.headers;
 
           headers.forEach(function(value, name) {
-            xhr.setRequestHeader(this._headerNames[name], value);
+            xhr.setRequestHeader(this['<names>'][name], value);
           }, headers);
         }
 
