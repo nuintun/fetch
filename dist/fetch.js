@@ -2,7 +2,7 @@
  * @module fetch
  * @author nuintun
  * @license MIT
- * @version 0.0.1
+ * @version 0.2.0
  * @description A pure JavaScript window.fetch polyfill.
  * @see https://github.com/nuintun/fetch#readme
  */
@@ -31,6 +31,31 @@
   var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
   // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
   var supportXDomainRequest = 'XDomainRequest' in window && document.documentMode >> 0 < 10;
+
+  /**
+   * @module native
+   * @license MIT
+   * @version 2017/12/05
+   */
+
+  // Used to match `RegExp`
+  // [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
+  var REGEXP_CHAR_RE = /[\\^$.*+?()[\]{}|]/g;
+  // Used to detect if a method is native
+  var IS_NATIVE_RE = Function.prototype.toString.call(Function);
+
+  IS_NATIVE_RE = IS_NATIVE_RE.replace(REGEXP_CHAR_RE, '\\$&');
+  IS_NATIVE_RE = IS_NATIVE_RE.replace(/Function|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?');
+  IS_NATIVE_RE = new RegExp('^' + IS_NATIVE_RE + '$');
+
+  /**
+   * @function native
+   * @param {any} value
+   * @returns {boolean}
+   */
+  function native(value) {
+    return typeof value === 'function' && IS_NATIVE_RE.test(value);
+  }
 
   /**
    * @module utils
@@ -62,8 +87,8 @@
    */
   function Blank() {}
 
-  var objectCreate = Object.create;
-  var setPrototypeOf = Object.setPrototypeOf;
+  var objectCreate = native(Object.create) ? Object.create : false;
+  var setPrototypeOf = native(Object.setPrototypeOf) ? Object.setPrototypeOf : false;
 
   /**
    * @function extend

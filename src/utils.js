@@ -4,6 +4,8 @@
  * @version 2017/11/28
  */
 
+import native from './native';
+
 export var toString = Object.prototype.toString;
 
 /**
@@ -28,8 +30,8 @@ export function typeOf(value) {
  */
 function Blank() {}
 
-var objectCreate = Object.create;
-var setPrototypeOf = Object.setPrototypeOf;
+var objectCreate = native(Object.create) ? Object.create : false;
+var setPrototypeOf = native(Object.setPrototypeOf) ? Object.setPrototypeOf : false;
 
 /**
  * @function extend

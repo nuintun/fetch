@@ -2,7 +2,7 @@
  * @module promise
  * @author nuintun
  * @license MIT
- * @version 0.0.1
+ * @version 0.2.0
  * @description A pure JavaScript ES6 promise polyfill.
  * @see https://nuintun.github.io/promise#readme
  */

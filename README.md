@@ -2,6 +2,7 @@
 
 > A pure JavaScript window.fetch polyfill.
 >
+> [![NPM Version][npm-image]][npm-url]
 > [![Dependencies][david-image]][david-url]
 
 ### Supports all mainstream browsers
@@ -18,5 +19,7 @@
 
 > [GitHub/fetch](https://github.com/github/fetch)
 
+[npm-image]: https://img.shields.io/npm/v/@nuintun/fetch.svg?style=flat-square
+[npm-url]: https://www.npmjs.org/package/@nuintun/fetch
 [david-image]: http://img.shields.io/david/dev/nuintun/fetch.svg?style=flat-square
 [david-url]: https://david-dm.org/nuintun/fetch?type=dev

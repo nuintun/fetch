@@ -57,11 +57,36 @@ typings/
 # dotenv environment variables file
 .env
 
+# git ignore configuration
+.gitignore
+
+# npm ignore configuration
+.npmignore
+
+# travis configuration
+.travis.yml
+
+# appveyor configuration
+appveyor.yml
+
+# tests directories
+tests
+test
+
+# npm configuration
+.npmrc
+
 # next.js build output
 .next
 
-# vscode
+# vscode configuration
 .vscode
 
 # npm lock file
 package-lock.json
+
+# src file
+/src/
+
+# rollup configuration
+/rollup.js

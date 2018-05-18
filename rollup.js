@@ -42,7 +42,7 @@ async function build(inputOptions, outputOptions) {
 }
 
 const banner = `/**
- * @module ${pkg.name}
+ * @module fetch
  * @author ${pkg.author.name}
  * @license ${pkg.license}
  * @version ${pkg.version}
