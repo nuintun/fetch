@@ -4,7 +4,7 @@
  * @version 2017/11/28
  */
 
-import { assertArguments, normalizeURL, extend } from './utils';
+import { assertArguments, extend } from './utils';
 import Headers from './headers';
 import Body from './body';
 
