@@ -1,13 +1,17 @@
 {
   "name": "@nuintun/fetch",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A pure JavaScript window.fetch polyfill.",
   "author": {
     "name": "nuintun",
     "email": "nuintun@qq.com"
   },
   "main": "dist/fetch.js",
-  "files": ["dist/fetch.js", "dist/fetch.min.js", "dist/fetch.js.map"],
+  "files": [
+    "dist/fetch.js",
+    "dist/fetch.min.js",
+    "dist/fetch.js.map"
+  ],
   "homepage": "https://github.com/nuintun/fetch#readme",
   "repository": {
     "type": "git",
@@ -21,8 +25,8 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "rollup": "^0.62.0",
-    "fs-extra": "^6.0.1",
+    "rollup": "^0.63.4",
+    "fs-extra": "^7.0.0",
     "uglify-es": "^3.3.9"
   }
 }
