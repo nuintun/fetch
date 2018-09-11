@@ -2,7 +2,7 @@
  * @module fetch
  * @author nuintun
  * @license MIT
- * @version 0.2.2
+ * @version 0.3.0
  * @description A pure JavaScript window.fetch polyfill.
  * @see https://github.com/nuintun/fetch#readme
  */
@@ -624,8 +624,11 @@
     } else if (supportArrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
       this['<arrayBuffer>'] = bufferClone(body);
     } else {
-      this.body = null;
-      this['<text>'] = '';
+      this['<text>'] = toString.call(body);
+
+      if (noContentType) {
+        this.headers.set('Content-Type', 'text/plain;charset=UTF-8');
+      }
     }
   };
 

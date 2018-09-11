@@ -201,8 +201,11 @@ Body.prototype['<body>'] = function(body) {
   } else if (supportArrayBuffer && (ArrayBuffer.prototype.isPrototypeOf(body) || isArrayBufferView(body))) {
     this['<arrayBuffer>'] = bufferClone(body);
   } else {
-    this.body = null;
-    this['<text>'] = '';
+    this['<text>'] = toString.call(body);
+
+    if (noContentType) {
+      this.headers.set('Content-Type', 'text/plain;charset=UTF-8');
+    }
   }
 };
 
