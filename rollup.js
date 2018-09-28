@@ -9,7 +9,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 const rollup = require('rollup');
-const uglify = require('uglify-es');
+const uglify = require('uglify-js');
 const pkg = require('./package.json');
 
 /**
@@ -28,7 +28,7 @@ async function build(inputOptions, outputOptions) {
   const map = `${file}.map`;
   const minify = uglify.minify(
     { 'fetch.js': result.code },
-    { ecma: 5, ie8: true, mangle: { eval: true }, sourceMap: { url: path.basename(map) } }
+    { ie8: true, mangle: { eval: true }, sourceMap: { url: path.basename(map) } }
   );
 
   await fs.outputFile(file, result.code);
