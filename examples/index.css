@@ -3,8 +3,7 @@
   /* IE9 */
   src: url(./UbuntuMono-R.eot);
   /* chrome、firefox、opera、Safari, Android, iOS 4.2+ */
-  src: url(./UbuntuMono-R.eot?#iefix) format("embedded-opentype"),
-    url(./UbuntuMono-R.svg#ubuntu) format("svg"),
+  src: url(./UbuntuMono-R.eot?#iefix) format("embedded-opentype"), url(./UbuntuMono-R.svg#ubuntu) format("svg"),
     url(./UbuntuMono-R.woff2) format("woff2"), url(./UbuntuMono-R.woff) format("woff"),
     url(./UbuntuMono-R.ttf) format("truetype");
 

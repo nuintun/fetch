@@ -9,7 +9,7 @@
 const path = require('path');
 const fs = require('fs-extra');
 const rollup = require('rollup');
-const uglify = require('uglify-js');
+const terser = require('terser');
 const pkg = require('./package.json');
 
 /**
@@ -21,12 +21,13 @@ async function build(inputOptions, outputOptions) {
   await fs.remove('dist');
 
   const bundle = await rollup.rollup(inputOptions);
-  const result = await bundle.generate(outputOptions);
+  const { output } = await bundle.generate(outputOptions);
+  const [result] = output;
 
   const file = outputOptions.file;
   const min = file.replace(/\.js$/i, '.min.js');
   const map = `${file}.map`;
-  const minify = uglify.minify(
+  const minify = terser.minify(
     { 'fetch.js': result.code },
     { ie8: true, mangle: { eval: true }, sourceMap: { url: path.basename(map) } }
   );

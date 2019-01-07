@@ -995,9 +995,7 @@
       if (cors) {
         switch (request.mode) {
           case 'same-origin':
-            return reject(
-              new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin')
-            );
+            return reject(new TypeError('Request mode is "same-origin" but the URL\'s origin is not same as the request origin'));
           case 'no-cors':
             var response = new Response();
 
