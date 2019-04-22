@@ -2,7 +2,7 @@
  * @module fetch
  * @author nuintun
  * @license MIT
- * @version 0.3.2
+ * @version 0.3.3
  * @description A pure JavaScript window.fetch polyfill.
  * @see https://github.com/nuintun/fetch#readme
  */
@@ -13,7 +13,7 @@
   /**
    * @module intro
    * @license MIT
-   * @version 2018/04/28
+   * @author nuintun
    */
 
   if (typeof window.fetch === 'function') return;
@@ -21,7 +21,7 @@
   /**
    * @module support
    * @license MIT
-   * @version 2017/11/28
+   * @author nuintun
    */
 
   var supportFormData = 'FormData' in window;
@@ -30,12 +30,12 @@
   var supportBlob = 'FileReader' in window && 'Blob' in window;
   var supportIterable = 'Symbol' in window && 'iterator' in Symbol;
   // IE10 support XMLHttpRequest 2.0, so ignore XDomainRequest support
-  var supportXDomainRequest = 'XDomainRequest' in window && document.documentMode >> 0 < 10;
+  var supportXDomainRequest = 'XDomainRequest' in window && document.documentMode >>> 0 < 10;
 
   /**
    * @module native
    * @license MIT
-   * @version 2017/12/05
+   * @author nuintun
    */
 
   // Used to match `RegExp`
@@ -60,7 +60,7 @@
   /**
    * @module utils
    * @license MIT
-   * @version 2017/11/28
+   * @author nuintun
    */
 
   var toString = Object.prototype.toString;
@@ -195,7 +195,7 @@
   /**
    * @module headers
    * @license MIT
-   * @version 2017/11/28
+   * @author nuintun
    */
 
   /**
@@ -427,7 +427,7 @@
   /**
    * @module body
    * @license MIT
-   * @version 2017/11/28
+   * @author nuintun
    */
 
   if (supportArrayBuffer) {
@@ -705,7 +705,7 @@
   /**
    * @module request
    * @license MIT
-   * @version 2017/11/28
+   * @author nuintun
    */
 
   // HTTP methods whose capitalization should be normalized
@@ -819,7 +819,7 @@
   /**
    * @module response
    * @license MIT
-   * @version 2017/11/28
+   * @author nuintun
    */
 
   var redirectStatuses = [301, 302, 303, 307, 308];
@@ -916,7 +916,7 @@
   /**
    * @module fetch
    * @license MIT
-   * @version 2017/11/28
+   * @author nuintun
    */
 
   /**

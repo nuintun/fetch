@@ -1,7 +1,7 @@
 /**
  * @module response
  * @license MIT
- * @version 2017/11/28
+ * @author nuintun
  */
 
 import { assertArguments, extend } from './utils';
