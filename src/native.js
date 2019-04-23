@@ -1,7 +1,7 @@
 /**
  * @module native
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 // Used to match `RegExp`

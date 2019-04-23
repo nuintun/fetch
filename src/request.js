@@ -1,7 +1,7 @@
 /**
  * @module request
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 import { hasAuth, normalizeURL, extend } from './utils';

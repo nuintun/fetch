@@ -1,7 +1,7 @@
 /**
  * @module fetch
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 import './intro';

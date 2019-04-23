@@ -1,7 +1,7 @@
 /**
  * @module rollup
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 'use strict';

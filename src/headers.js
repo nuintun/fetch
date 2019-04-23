@@ -1,7 +1,7 @@
 /**
  * @module headers
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 import { supportIterable } from './support';

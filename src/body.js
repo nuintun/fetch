@@ -1,7 +1,7 @@
 /**
  * @module body
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 import { toString, typeOf } from './utils';

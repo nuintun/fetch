@@ -12,16 +12,16 @@
 
   /**
    * @module intro
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   if (typeof window.fetch === 'function') return;
 
   /**
    * @module support
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   var supportFormData = 'FormData' in window;
@@ -34,8 +34,8 @@
 
   /**
    * @module native
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   // Used to match `RegExp`
@@ -59,8 +59,8 @@
 
   /**
    * @module utils
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   var toString = Object.prototype.toString;
@@ -194,8 +194,8 @@
 
   /**
    * @module headers
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   /**
@@ -426,8 +426,8 @@
 
   /**
    * @module body
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   if (supportArrayBuffer) {
@@ -704,8 +704,8 @@
 
   /**
    * @module request
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   // HTTP methods whose capitalization should be normalized
@@ -818,8 +818,8 @@
 
   /**
    * @module response
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   var redirectStatuses = [301, 302, 303, 307, 308];
@@ -915,8 +915,8 @@
 
   /**
    * @module fetch
-   * @license MIT
    * @author nuintun
+   * @license MIT
    */
 
   /**

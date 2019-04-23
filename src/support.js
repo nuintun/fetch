@@ -1,7 +1,7 @@
 /**
  * @module support
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 export var supportFormData = 'FormData' in this;

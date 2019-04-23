@@ -1,7 +1,7 @@
 /**
  * @module intro
- * @license MIT
  * @author nuintun
+ * @license MIT
  */
 
 if (typeof this.fetch === 'function') return;
