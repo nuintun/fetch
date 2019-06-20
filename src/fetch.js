@@ -46,7 +46,7 @@ function parseHeaders(xhr) {
  * @param {Headers} headers
  * @returns {string}
  */
-function responseURL(xhr, headers, url) {
+function responseURL(xhr, headers) {
   return 'responseURL' in xhr ? xhr.responseURL : headers.get('X-Request-URL');
 }
 
