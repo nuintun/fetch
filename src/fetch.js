@@ -5,11 +5,11 @@
  */
 
 import './intro';
-import { supportBlob, supportXDomainRequest } from './support';
-import { isCORS, assertArguments } from './utils';
+import Headers from './headers';
 import Request from './request';
 import Response from './response';
-import Headers from './headers';
+import { isCORS, assertArguments } from './utils';
+import { supportBlob, supportXDomainRequest } from './support';
 
 /**
  * @function parseHeaders

@@ -73,10 +73,9 @@ var A = document.createElement('a');
  * @function normalizeURL
  * @description Get full url. If URL includes credentials IE will can't read a.href
  * @param {string} url
- * @param {boolean} hash
  * @returns {string}
  */
-export function normalizeURL(url, hash) {
+export function normalizeURL(url) {
   A.href = url;
 
   if (!A.host) {

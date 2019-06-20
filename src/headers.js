@@ -5,7 +5,7 @@
  */
 
 import { supportIterable } from './support';
-import { typeOf, assertArguments } from './utils';
+import { assertArguments, typeOf } from './utils';
 
 /**
  * @function normalizeName

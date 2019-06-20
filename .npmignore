@@ -86,7 +86,10 @@ test
 package-lock.json
 
 # src file
-/src/
+src/
+
+# examples
+examples/
 
 # rollup configuration
-/rollup.js
+rollup.js

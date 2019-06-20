@@ -5,19 +5,19 @@
  */
 
 import { toString, typeOf } from './utils';
-import { supportBlob, supportFormData, supportSearchParams, supportArrayBuffer } from './support';
+import { supportArrayBuffer, supportBlob, supportFormData, supportSearchParams } from './support';
 
 if (supportArrayBuffer) {
   var viewClasses = [
     '[object Int8Array]',
     '[object Uint8Array]',
-    '[object Uint8ClampedArray]',
     '[object Int16Array]',
-    '[object Uint16Array]',
     '[object Int32Array]',
+    '[object Uint16Array]',
     '[object Uint32Array]',
     '[object Float32Array]',
-    '[object Float64Array]'
+    '[object Float64Array]',
+    '[object Uint8ClampedArray]'
   ];
 
   /**

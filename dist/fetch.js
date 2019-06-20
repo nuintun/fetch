@@ -2,7 +2,7 @@
  * @module fetch
  * @author nuintun
  * @license MIT
- * @version 1.0.0
+ * @version 1.1.0
  * @description A pure JavaScript window.fetch polyfill.
  * @see https://github.com/nuintun/fetch#readme
  */
@@ -130,10 +130,9 @@
    * @function normalizeURL
    * @description Get full url. If URL includes credentials IE will can't read a.href
    * @param {string} url
-   * @param {boolean} hash
    * @returns {string}
    */
-  function normalizeURL(url, hash) {
+  function normalizeURL(url) {
     A.href = url;
 
     if (!A.host) {
@@ -434,13 +433,13 @@
     var viewClasses = [
       '[object Int8Array]',
       '[object Uint8Array]',
-      '[object Uint8ClampedArray]',
       '[object Int16Array]',
-      '[object Uint16Array]',
       '[object Int32Array]',
+      '[object Uint16Array]',
       '[object Uint32Array]',
       '[object Float32Array]',
-      '[object Float64Array]'
+      '[object Float64Array]',
+      '[object Uint8ClampedArray]'
     ];
 
     /**

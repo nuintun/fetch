@@ -4,9 +4,9 @@
  * @license MIT
  */
 
-import { hasAuth, normalizeURL, extend } from './utils';
-import Headers from './headers';
 import Body from './body';
+import Headers from './headers';
+import { extend, hasAuth, normalizeURL } from './utils';
 
 // HTTP methods whose capitalization should be normalized
 var methods = ['DELETE', 'GET', 'HEAD', 'OPTIONS', 'POST', 'PUT'];

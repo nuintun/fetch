@@ -4,9 +4,9 @@
  * @license MIT
  */
 
-import { assertArguments, extend } from './utils';
-import Headers from './headers';
 import Body from './body';
+import Headers from './headers';
+import { assertArguments, extend } from './utils';
 
 var redirectStatuses = [301, 302, 303, 307, 308];
 
