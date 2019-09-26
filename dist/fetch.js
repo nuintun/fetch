@@ -2,7 +2,7 @@
  * @module fetch
  * @author nuintun
  * @license MIT
- * @version 1.1.1
+ * @version 1.1.2
  * @description A pure JavaScript window.fetch polyfill.
  * @see https://github.com/nuintun/fetch#readme
  */

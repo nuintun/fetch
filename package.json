@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/fetch",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A pure JavaScript window.fetch polyfill.",
   "author": {
     "name": "nuintun",
@@ -25,8 +25,8 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "rollup": "^1.20.3",
-    "terser": "^4.2.1",
+    "rollup": "^1.21.4",
+    "terser": "^4.3.2",
     "fs-extra": "^8.1.0"
   }
 }
